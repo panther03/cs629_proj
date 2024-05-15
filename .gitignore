@@ -1,0 +1,5 @@
+*.log
+*.sched
+output.log
+pipelined.log
+build/
