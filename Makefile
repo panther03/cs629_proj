@@ -1,4 +1,4 @@
-TARGETS := TopPipelined RouterTestBench
+TARGETS := TopPipelined DualCoreTest RouterTestBench
 TARGETSV := $(addsuffix _verilog,$(TARGETS))
 
 .DEFAULT_GOAL := all

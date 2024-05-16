@@ -11,6 +11,7 @@ import RVUtil::*;
 import Pipelined::*;
 
 import MemTypes::*;
+import NetworkTypes::*;
 import CacheInterface::*;
 
 import FlitEngine::*;
@@ -25,6 +26,8 @@ interface Core;
     method Action putFlit(Flit f);
     // Core sending a flit out to the network
     method ActionValue#(Flit) getFlit();
+    // Has the core reached a halt
+    method Bool getFinished();
 endinterface
 
 module mkCore #(Bit#(4) coreId) (Core);
@@ -140,7 +143,6 @@ module mkCore #(Bit#(4) coreId) (Core);
                 end
                 $fflush(stderr);
                 count_arrived <= count_arrived + 1; 
-                if (count_arrived == 1) $finish;
 
             // set local sync register
             end else if (req.addr == 'hfd00_0000) begin
@@ -156,6 +158,14 @@ module mkCore #(Bit#(4) coreId) (Core);
                 // clearing takes priority
                 bsp_sync_all_end[1] <= False;
 
+            end else if (req.addr[31:4] == 'hfe00_000) begin
+                FlitType ft = case (req.addr[3:0]) 
+                    4'h0: BODY;
+                    4'h4: HEAD;
+                    4'h8: TAIL;
+                    default: INVALID;
+                endcase;
+                outgoingFlits.enq(Flit { flitType: ft, flitData: req.data});
             // Write to scratchpad
             end else if (req.addr[31:24] == 'hff) begin
                 if (debug) $display("[c=%d] write to %d, %d", cycle_count, req.addr[13:2], req.data);
@@ -230,7 +240,7 @@ module mkCore #(Bit#(4) coreId) (Core);
         // TODO: check the processor ID before we put it to the FE
         // for verificaton purposes (sanity check)
         let flitCpuId = pack(f.flitData)[21:18];
-        if (flitCpuId != coreId) begin
+        if (f.flitType == HEAD && flitCpuId != coreId) begin
             $fdisplay(stderr, "Received a flit (for %d) which is not for me (%d).. ", flitCpuId, coreId);
         end else begin
             fe.putFlit(f);
@@ -240,5 +250,9 @@ module mkCore #(Bit#(4) coreId) (Core);
     method ActionValue#(Flit) getFlit();
         let f = outgoingFlits.first(); outgoingFlits.deq();
         return f;
+    endmethod
+
+    method Bool getFinished();
+        return count_arrived > 1;
     endmethod
 endmodule
