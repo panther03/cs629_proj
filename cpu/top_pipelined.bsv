@@ -10,9 +10,9 @@ import CacheInterface::*;
 
 module mktop_pipelined(Empty);
     // Instantiate the dual ported memory
-    // BRAM_Configure cfg = defaultValue();
-    // cfg.loadFormat = tagged Hex "mem.vmh";
-    // BRAM2PortBE#(Bit#(30), Word, 4) bram <- mkBRAM2ServerBE(cfg);
+    BRAM_Configure cfg = defaultValue();
+    cfg.loadFormat = tagged Binary "zeroScratch.vmh";
+    BRAM2Port#(Bit#(12), Word) scratch <- mkBRAM2Server(cfg); // 32K
 
 
     CacheInterface cache <- mkCacheInterface();
@@ -80,38 +80,65 @@ module mktop_pipelined(Empty);
     rule requestMMIO;
         let req <- rv_core.getMMIOReq;
         if (debug) $display("Get MMIOReq", fshow(req));
+
+        // Write MMIO (ignore sub-word MMIO store)
         if (req.byte_en == 'hf) begin
-            if (req.addr == 'hf000_fff4) begin
-                // Write integer to STDERR
-                        $fwrite(stderr, "%0d", req.data);
-                        $fflush(stderr);
-            end
-        end
-        if (req.addr ==  'hf000_fff0) begin
+
+            // putchar()
+            if (req.addr ==  'hf000_fff0) begin
                 // Writing to STDERR
                 $fwrite(stderr, "%c", req.data[7:0]);
                 $fflush(stderr);
-        end else
-            if (req.addr == 'hf000_fff8) begin
+
+            // exit()
+            end else if (req.addr == 'hf000_fff8) begin
                 $display("RAN CYCLES", cycle_count);
 
-            // Exiting Simulation
+                // Exiting Simulation
                 if (req.data == 0) begin
-
                     if (count_arrived == 0 ) $fdisplay(stderr, "  [0;32mPASS first thread [0m");
                     if (count_arrived == 1 ) $fdisplay(stderr, "  [0;32mPASS second thread [0m");
+                end else begin
+                    if (count_arrived == 0) $fdisplay(stderr, "  [0;31mFAIL first thread[0m (%0d)", req.data);
+                    if (count_arrived == 1) $fdisplay(stderr, "  [0;31mFAIL second thread[0m (%0d)", req.data);
                 end
-                else
-                    begin
-                         if (count_arrived == 0) $fdisplay(stderr, "  [0;31mFAIL first thread[0m (%0d)", req.data);
-                         if (count_arrived == 1) $fdisplay(stderr, "  [0;31mFAIL second thread[0m (%0d)", req.data);
-                    end
                 $fflush(stderr);
                 count_arrived <= count_arrived + 1; 
                 if (count_arrived == 1) $finish;
+
+            // Write to scratchpad
+            end else if (req.addr[31:24] == 'hff) begin
+                if (debug) $display("[c=%d] write to %d, %d", cycle_count, req.addr[13:2], req.data);
+                scratch.portA.request.put(BRAMRequest{
+                    write: True,
+                    responseOnWrite: False,
+                    address: req.addr[13:2],
+                    datain: req.data
+                });
             end
 
-        mmioreq.enq(req);
+            mmioreq.enq(req);
+        // Read MMIO
+        end else if (req.byte_en == 'h0) begin
+            if (req.addr[31:24] == 'hff) begin
+                if (debug) $display("[c=%d] read from %d", cycle_count, req.addr[13:2]);
+                scratch.portA.request.put(BRAMRequest{
+                    write: False,
+                    responseOnWrite: False,
+                    address: req.addr[13:2],
+                    datain: ?
+                });    
+            end
+        end else begin
+            $fdisplay(stderr, "Illegal sub-word MMIO access");
+            $finish;
+        end
+        
+    endrule
+
+    rule getScratchResp;
+        let scratchResp <- scratch.portA.response.get();
+        mmioreq.enq(Mem { byte_en: 4'b0, addr: 32'b0, data: scratchResp});
     endrule
 
     rule responseMMIO;

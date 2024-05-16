@@ -58,13 +58,14 @@ endmodule
 typedef struct { Bool isUnsigned; Bit#(2) size; Bit#(2) offset; Bool mmio; } MemBusiness deriving (Eq, FShow, Bits);
 
 function Bool isMMIO(Bit#(32) addr);
-    Bool x = case (addr) 
+    /*Bool x = case (addr) 
         32'hf000fff0: True;
         32'hf000fff4: True;
         32'hf000fff8: True;
         default: False;
-    endcase;
-    return x;
+    endcase;*/
+    // simplifying assumption
+    return addr[31:28] == 4'hF;
 endfunction
 
 typedef struct { Bit#(32) pc;

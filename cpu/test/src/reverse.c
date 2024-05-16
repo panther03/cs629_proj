@@ -1,11 +1,11 @@
 int main() {
   char s[256];
   int i;
-  int c = getchar();
+  int c = 0;// getchar();
 
   for (i = 0; c != -1 && i < 256; i++) {
     s[i] = c;
-    c = getchar();
+    c = 0;//getchar();
   }
 
   for (; i > 0; i--) {

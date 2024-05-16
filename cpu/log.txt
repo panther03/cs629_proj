@@ -1,0 +1,594 @@
+Warning: file 'memlines.vmh' for memory 'cache_mainMem_bram_memory' has a gap at addresses 67 to 127.
+Warning: file 'memlines.vmh' for memory 'cache_mainMem_bram_memory' has a gap at addresses 129 to 67108863.
+Warning: file 'zero.vmh' for memory 'scratch_memory' has a gap at addresses 128 to 4095.
+(cyc=         1) [Fetch] thread=0'h00000000
+Get IReqMem { byte_en: 'h0, addr: 'h00000000, data: 'haaaaaaaa }
+(cyc=         2) [Fetch] thread=1'h00000004
+Get IResp Mem { byte_en: 'h0, addr: 'h00000000, data: 'haaaaaaaa }'h00000093
+(cyc=        28) [Decode] 'h0
+(cyc=        29) [Execute] 'h0
+Get IReqMem { byte_en: 'h0, addr: 'h00000000, data: 'haaaaaaaa }
+Get IResp Mem { byte_en: 'h0, addr: 'h00000000, data: 'haaaaaaaa }'h00000093
+(cyc=        30) [Fetch] thread=0'h00000004
+Get IReqMem { byte_en: 'h0, addr: 'h00000004, data: 'haaaaaaaa }
+(cyc=        30) [Writeback]'h0
+(cyc=        30) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000004, data: 'haaaaaaaa }'h00000113
+(cyc=        31) [Execute] 'h1
+(cyc=        31) [Fetch] thread=1'h00000008
+Get IReqMem { byte_en: 'h0, addr: 'h00000004, data: 'haaaaaaaa }
+(cyc=        31) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000004, data: 'haaaaaaaa }'h00000113
+(cyc=        32) [Execute] 'h0
+(cyc=        32) [Fetch] thread=0'h00000008
+Get IReqMem { byte_en: 'h0, addr: 'h00000008, data: 'haaaaaaaa }
+(cyc=        32) [Writeback]'h1
+(cyc=        32) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000008, data: 'haaaaaaaa }'h00000193
+(cyc=        33) [Execute] 'h1
+(cyc=        33) [Fetch] thread=1'h0000000c
+Get IReqMem { byte_en: 'h0, addr: 'h00000008, data: 'haaaaaaaa }
+(cyc=        33) [Writeback]'h0
+(cyc=        33) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000008, data: 'haaaaaaaa }'h00000193
+(cyc=        34) [Execute] 'h0
+(cyc=        34) [Fetch] thread=0'h0000000c
+Get IReqMem { byte_en: 'h0, addr: 'h0000000c, data: 'haaaaaaaa }
+(cyc=        34) [Writeback]'h1
+(cyc=        34) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000000c, data: 'haaaaaaaa }'h00000213
+(cyc=        35) [Execute] 'h1
+(cyc=        35) [Fetch] thread=1'h00000010
+Get IReqMem { byte_en: 'h0, addr: 'h0000000c, data: 'haaaaaaaa }
+(cyc=        35) [Writeback]'h0
+(cyc=        35) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000000c, data: 'haaaaaaaa }'h00000213
+(cyc=        36) [Execute] 'h0
+(cyc=        36) [Fetch] thread=0'h00000010
+Get IReqMem { byte_en: 'h0, addr: 'h00000010, data: 'haaaaaaaa }
+(cyc=        36) [Writeback]'h1
+(cyc=        36) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000010, data: 'haaaaaaaa }'h00000293
+(cyc=        37) [Execute] 'h1
+(cyc=        37) [Fetch] thread=1'h00000014
+Get IReqMem { byte_en: 'h0, addr: 'h00000010, data: 'haaaaaaaa }
+(cyc=        37) [Writeback]'h0
+(cyc=        37) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000010, data: 'haaaaaaaa }'h00000293
+(cyc=        38) [Execute] 'h0
+(cyc=        38) [Fetch] thread=0'h00000014
+Get IReqMem { byte_en: 'h0, addr: 'h00000014, data: 'haaaaaaaa }
+(cyc=        38) [Writeback]'h1
+(cyc=        38) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000014, data: 'haaaaaaaa }'h00000313
+(cyc=        39) [Execute] 'h1
+(cyc=        39) [Fetch] thread=1'h00000018
+Get IReqMem { byte_en: 'h0, addr: 'h00000014, data: 'haaaaaaaa }
+(cyc=        39) [Writeback]'h0
+(cyc=        39) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000014, data: 'haaaaaaaa }'h00000313
+(cyc=        40) [Execute] 'h0
+(cyc=        40) [Fetch] thread=0'h00000018
+Get IReqMem { byte_en: 'h0, addr: 'h00000018, data: 'haaaaaaaa }
+(cyc=        40) [Writeback]'h1
+(cyc=        40) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000018, data: 'haaaaaaaa }'h00000393
+(cyc=        41) [Execute] 'h1
+(cyc=        41) [Fetch] thread=1'h0000001c
+Get IReqMem { byte_en: 'h0, addr: 'h00000018, data: 'haaaaaaaa }
+(cyc=        41) [Writeback]'h0
+(cyc=        41) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000018, data: 'haaaaaaaa }'h00000393
+(cyc=        42) [Execute] 'h0
+(cyc=        42) [Fetch] thread=0'h0000001c
+Get IReqMem { byte_en: 'h0, addr: 'h0000001c, data: 'haaaaaaaa }
+(cyc=        42) [Writeback]'h1
+(cyc=        42) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000001c, data: 'haaaaaaaa }'h00000413
+(cyc=        43) [Execute] 'h1
+(cyc=        43) [Fetch] thread=1'h00000020
+Get IReqMem { byte_en: 'h0, addr: 'h0000001c, data: 'haaaaaaaa }
+(cyc=        43) [Writeback]'h0
+(cyc=        43) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000001c, data: 'haaaaaaaa }'h00000413
+(cyc=        44) [Execute] 'h0
+(cyc=        44) [Fetch] thread=0'h00000020
+Get IReqMem { byte_en: 'h0, addr: 'h00000020, data: 'haaaaaaaa }
+(cyc=        44) [Writeback]'h1
+(cyc=        44) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000020, data: 'haaaaaaaa }'h00000493
+(cyc=        45) [Execute] 'h1
+(cyc=        45) [Fetch] thread=1'h00000024
+Get IReqMem { byte_en: 'h0, addr: 'h00000020, data: 'haaaaaaaa }
+(cyc=        45) [Writeback]'h0
+(cyc=        45) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000020, data: 'haaaaaaaa }'h00000493
+(cyc=        46) [Execute] 'h0
+(cyc=        46) [Fetch] thread=0'h00000024
+Get IReqMem { byte_en: 'h0, addr: 'h00000024, data: 'haaaaaaaa }
+(cyc=        46) [Writeback]'h1
+(cyc=        46) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000024, data: 'haaaaaaaa }'h00000593
+(cyc=        47) [Execute] 'h1
+(cyc=        47) [Fetch] thread=1'h00000028
+Get IReqMem { byte_en: 'h0, addr: 'h00000024, data: 'haaaaaaaa }
+(cyc=        47) [Writeback]'h0
+(cyc=        47) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000024, data: 'haaaaaaaa }'h00000593
+(cyc=        48) [Execute] 'h0
+(cyc=        48) [Fetch] thread=0'h00000028
+Get IReqMem { byte_en: 'h0, addr: 'h00000028, data: 'haaaaaaaa }
+(cyc=        48) [Writeback]'h1
+(cyc=        48) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000028, data: 'haaaaaaaa }'h00000613
+(cyc=        49) [Execute] 'h1
+(cyc=        49) [Fetch] thread=1'h0000002c
+Get IReqMem { byte_en: 'h0, addr: 'h00000028, data: 'haaaaaaaa }
+(cyc=        49) [Writeback]'h0
+(cyc=        49) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000028, data: 'haaaaaaaa }'h00000613
+(cyc=        50) [Execute] 'h0
+(cyc=        50) [Fetch] thread=0'h0000002c
+Get IReqMem { byte_en: 'h0, addr: 'h0000002c, data: 'haaaaaaaa }
+(cyc=        50) [Writeback]'h1
+(cyc=        50) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000002c, data: 'haaaaaaaa }'h00000693
+(cyc=        51) [Execute] 'h1
+(cyc=        51) [Fetch] thread=1'h00000030
+Get IReqMem { byte_en: 'h0, addr: 'h0000002c, data: 'haaaaaaaa }
+(cyc=        51) [Writeback]'h0
+(cyc=        51) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000002c, data: 'haaaaaaaa }'h00000693
+(cyc=        52) [Execute] 'h0
+(cyc=        52) [Fetch] thread=0'h00000030
+Get IReqMem { byte_en: 'h0, addr: 'h00000030, data: 'haaaaaaaa }
+(cyc=        52) [Writeback]'h1
+(cyc=        52) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000030, data: 'haaaaaaaa }'h00000713
+(cyc=        53) [Execute] 'h1
+(cyc=        53) [Fetch] thread=1'h00000034
+Get IReqMem { byte_en: 'h0, addr: 'h00000030, data: 'haaaaaaaa }
+(cyc=        53) [Writeback]'h0
+(cyc=        53) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000030, data: 'haaaaaaaa }'h00000713
+(cyc=        54) [Execute] 'h0
+(cyc=        54) [Fetch] thread=0'h00000034
+Get IReqMem { byte_en: 'h0, addr: 'h00000034, data: 'haaaaaaaa }
+(cyc=        54) [Writeback]'h1
+(cyc=        54) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000034, data: 'haaaaaaaa }'h00000793
+(cyc=        55) [Execute] 'h1
+(cyc=        55) [Fetch] thread=1'h00000038
+Get IReqMem { byte_en: 'h0, addr: 'h00000034, data: 'haaaaaaaa }
+(cyc=        55) [Writeback]'h0
+(cyc=        55) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000034, data: 'haaaaaaaa }'h00000793
+(cyc=        56) [Execute] 'h0
+(cyc=        56) [Fetch] thread=0'h00000038
+Get IReqMem { byte_en: 'h0, addr: 'h00000038, data: 'haaaaaaaa }
+(cyc=        56) [Writeback]'h1
+(cyc=        56) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000038, data: 'haaaaaaaa }'h00000813
+(cyc=        57) [Execute] 'h1
+(cyc=        57) [Fetch] thread=1'h0000003c
+Get IReqMem { byte_en: 'h0, addr: 'h00000038, data: 'haaaaaaaa }
+(cyc=        57) [Writeback]'h0
+(cyc=        57) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000038, data: 'haaaaaaaa }'h00000813
+(cyc=        58) [Execute] 'h0
+(cyc=        58) [Fetch] thread=0'h0000003c
+Get IReqMem { byte_en: 'h0, addr: 'h0000003c, data: 'haaaaaaaa }
+(cyc=        58) [Writeback]'h1
+(cyc=        58) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000003c, data: 'haaaaaaaa }'h00000893
+(cyc=        59) [Execute] 'h1
+(cyc=        59) [Fetch] thread=1'h00000040
+Get IReqMem { byte_en: 'h0, addr: 'h0000003c, data: 'haaaaaaaa }
+(cyc=        59) [Writeback]'h0
+(cyc=        59) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000003c, data: 'haaaaaaaa }'h00000893
+(cyc=        60) [Execute] 'h0
+(cyc=        60) [Fetch] thread=0'h00000040
+Get IReqMem { byte_en: 'h0, addr: 'h00000040, data: 'haaaaaaaa }
+(cyc=        60) [Writeback]'h1
+(cyc=        60) [Decode] 'h1
+(cyc=        61) [Execute] 'h1
+(cyc=        61) [Fetch] thread=1'h00000044
+(cyc=        61) [Writeback]'h0
+(cyc=        62) [Writeback]'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000040, data: 'haaaaaaaa }'h00000913
+(cyc=        87) [Decode] 'h0
+(cyc=        88) [Execute] 'h0
+Get IReqMem { byte_en: 'h0, addr: 'h00000040, data: 'haaaaaaaa }
+Get IResp Mem { byte_en: 'h0, addr: 'h00000040, data: 'haaaaaaaa }'h00000913
+(cyc=        89) [Fetch] thread=0'h00000044
+Get IReqMem { byte_en: 'h0, addr: 'h00000044, data: 'haaaaaaaa }
+(cyc=        89) [Writeback]'h0
+(cyc=        89) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000044, data: 'haaaaaaaa }'h00000993
+(cyc=        90) [Execute] 'h1
+(cyc=        90) [Fetch] thread=1'h00000048
+Get IReqMem { byte_en: 'h0, addr: 'h00000044, data: 'haaaaaaaa }
+(cyc=        90) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000044, data: 'haaaaaaaa }'h00000993
+(cyc=        91) [Execute] 'h0
+(cyc=        91) [Fetch] thread=0'h00000048
+Get IReqMem { byte_en: 'h0, addr: 'h00000048, data: 'haaaaaaaa }
+(cyc=        91) [Writeback]'h1
+(cyc=        91) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000048, data: 'haaaaaaaa }'h00000a13
+(cyc=        92) [Execute] 'h1
+(cyc=        92) [Fetch] thread=1'h0000004c
+Get IReqMem { byte_en: 'h0, addr: 'h00000048, data: 'haaaaaaaa }
+(cyc=        92) [Writeback]'h0
+(cyc=        92) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000048, data: 'haaaaaaaa }'h00000a13
+(cyc=        93) [Execute] 'h0
+(cyc=        93) [Fetch] thread=0'h0000004c
+Get IReqMem { byte_en: 'h0, addr: 'h0000004c, data: 'haaaaaaaa }
+(cyc=        93) [Writeback]'h1
+(cyc=        93) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000004c, data: 'haaaaaaaa }'h00000a93
+(cyc=        94) [Execute] 'h1
+(cyc=        94) [Fetch] thread=1'h00000050
+Get IReqMem { byte_en: 'h0, addr: 'h0000004c, data: 'haaaaaaaa }
+(cyc=        94) [Writeback]'h0
+(cyc=        94) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000004c, data: 'haaaaaaaa }'h00000a93
+(cyc=        95) [Execute] 'h0
+(cyc=        95) [Fetch] thread=0'h00000050
+Get IReqMem { byte_en: 'h0, addr: 'h00000050, data: 'haaaaaaaa }
+(cyc=        95) [Writeback]'h1
+(cyc=        95) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000050, data: 'haaaaaaaa }'h00000b13
+(cyc=        96) [Execute] 'h1
+(cyc=        96) [Fetch] thread=1'h00000054
+Get IReqMem { byte_en: 'h0, addr: 'h00000050, data: 'haaaaaaaa }
+(cyc=        96) [Writeback]'h0
+(cyc=        96) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000050, data: 'haaaaaaaa }'h00000b13
+(cyc=        97) [Execute] 'h0
+(cyc=        97) [Fetch] thread=0'h00000054
+Get IReqMem { byte_en: 'h0, addr: 'h00000054, data: 'haaaaaaaa }
+(cyc=        97) [Writeback]'h1
+(cyc=        97) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000054, data: 'haaaaaaaa }'h00000b93
+(cyc=        98) [Execute] 'h1
+(cyc=        98) [Fetch] thread=1'h00000058
+Get IReqMem { byte_en: 'h0, addr: 'h00000054, data: 'haaaaaaaa }
+(cyc=        98) [Writeback]'h0
+(cyc=        98) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000054, data: 'haaaaaaaa }'h00000b93
+(cyc=        99) [Execute] 'h0
+(cyc=        99) [Fetch] thread=0'h00000058
+Get IReqMem { byte_en: 'h0, addr: 'h00000058, data: 'haaaaaaaa }
+(cyc=        99) [Writeback]'h1
+(cyc=        99) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000058, data: 'haaaaaaaa }'h00000c13
+(cyc=       100) [Execute] 'h1
+(cyc=       100) [Fetch] thread=1'h0000005c
+Get IReqMem { byte_en: 'h0, addr: 'h00000058, data: 'haaaaaaaa }
+(cyc=       100) [Writeback]'h0
+(cyc=       100) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000058, data: 'haaaaaaaa }'h00000c13
+(cyc=       101) [Execute] 'h0
+(cyc=       101) [Fetch] thread=0'h0000005c
+Get IReqMem { byte_en: 'h0, addr: 'h0000005c, data: 'haaaaaaaa }
+(cyc=       101) [Writeback]'h1
+(cyc=       101) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000005c, data: 'haaaaaaaa }'h00000c93
+(cyc=       102) [Execute] 'h1
+(cyc=       102) [Fetch] thread=1'h00000060
+Get IReqMem { byte_en: 'h0, addr: 'h0000005c, data: 'haaaaaaaa }
+(cyc=       102) [Writeback]'h0
+(cyc=       102) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000005c, data: 'haaaaaaaa }'h00000c93
+(cyc=       103) [Execute] 'h0
+(cyc=       103) [Fetch] thread=0'h00000060
+Get IReqMem { byte_en: 'h0, addr: 'h00000060, data: 'haaaaaaaa }
+(cyc=       103) [Writeback]'h1
+(cyc=       103) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000060, data: 'haaaaaaaa }'h00000d13
+(cyc=       104) [Execute] 'h1
+(cyc=       104) [Fetch] thread=1'h00000064
+Get IReqMem { byte_en: 'h0, addr: 'h00000060, data: 'haaaaaaaa }
+(cyc=       104) [Writeback]'h0
+(cyc=       104) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000060, data: 'haaaaaaaa }'h00000d13
+(cyc=       105) [Execute] 'h0
+(cyc=       105) [Fetch] thread=0'h00000064
+Get IReqMem { byte_en: 'h0, addr: 'h00000064, data: 'haaaaaaaa }
+(cyc=       105) [Writeback]'h1
+(cyc=       105) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000064, data: 'haaaaaaaa }'h00000d93
+(cyc=       106) [Execute] 'h1
+(cyc=       106) [Fetch] thread=1'h00000068
+Get IReqMem { byte_en: 'h0, addr: 'h00000064, data: 'haaaaaaaa }
+(cyc=       106) [Writeback]'h0
+(cyc=       106) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000064, data: 'haaaaaaaa }'h00000d93
+(cyc=       107) [Execute] 'h0
+(cyc=       107) [Fetch] thread=0'h00000068
+Get IReqMem { byte_en: 'h0, addr: 'h00000068, data: 'haaaaaaaa }
+(cyc=       107) [Writeback]'h1
+(cyc=       107) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000068, data: 'haaaaaaaa }'h00000e13
+(cyc=       108) [Execute] 'h1
+(cyc=       108) [Fetch] thread=1'h0000006c
+Get IReqMem { byte_en: 'h0, addr: 'h00000068, data: 'haaaaaaaa }
+(cyc=       108) [Writeback]'h0
+(cyc=       108) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000068, data: 'haaaaaaaa }'h00000e13
+(cyc=       109) [Execute] 'h0
+(cyc=       109) [Fetch] thread=0'h0000006c
+Get IReqMem { byte_en: 'h0, addr: 'h0000006c, data: 'haaaaaaaa }
+(cyc=       109) [Writeback]'h1
+(cyc=       109) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000006c, data: 'haaaaaaaa }'h00000e93
+(cyc=       110) [Execute] 'h1
+(cyc=       110) [Fetch] thread=1'h00000070
+Get IReqMem { byte_en: 'h0, addr: 'h0000006c, data: 'haaaaaaaa }
+(cyc=       110) [Writeback]'h0
+(cyc=       110) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000006c, data: 'haaaaaaaa }'h00000e93
+(cyc=       111) [Execute] 'h0
+(cyc=       111) [Fetch] thread=0'h00000070
+Get IReqMem { byte_en: 'h0, addr: 'h00000070, data: 'haaaaaaaa }
+(cyc=       111) [Writeback]'h1
+(cyc=       111) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000070, data: 'haaaaaaaa }'h00000f13
+(cyc=       112) [Execute] 'h1
+(cyc=       112) [Fetch] thread=1'h00000074
+Get IReqMem { byte_en: 'h0, addr: 'h00000070, data: 'haaaaaaaa }
+(cyc=       112) [Writeback]'h0
+(cyc=       112) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000070, data: 'haaaaaaaa }'h00000f13
+(cyc=       113) [Execute] 'h0
+(cyc=       113) [Fetch] thread=0'h00000074
+Get IReqMem { byte_en: 'h0, addr: 'h00000074, data: 'haaaaaaaa }
+(cyc=       113) [Writeback]'h1
+(cyc=       113) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000074, data: 'haaaaaaaa }'h00000f93
+(cyc=       114) [Execute] 'h1
+(cyc=       114) [Fetch] thread=1'h00000078
+Get IReqMem { byte_en: 'h0, addr: 'h00000074, data: 'haaaaaaaa }
+(cyc=       114) [Writeback]'h0
+(cyc=       114) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000074, data: 'haaaaaaaa }'h00000f93
+(cyc=       115) [Execute] 'h0
+(cyc=       115) [Fetch] thread=0'h00000078
+Get IReqMem { byte_en: 'h0, addr: 'h00000078, data: 'haaaaaaaa }
+(cyc=       115) [Writeback]'h1
+(cyc=       115) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000078, data: 'haaaaaaaa }'h10000137
+(cyc=       116) [Execute] 'h1
+(cyc=       116) [Fetch] thread=1'h0000007c
+Get IReqMem { byte_en: 'h0, addr: 'h00000078, data: 'haaaaaaaa }
+(cyc=       116) [Writeback]'h0
+(cyc=       116) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000078, data: 'haaaaaaaa }'h10000137
+(cyc=       117) [Execute] 'h0
+(cyc=       117) [Fetch] thread=0'h0000007c
+Get IReqMem { byte_en: 'h0, addr: 'h0000007c, data: 'haaaaaaaa }
+(cyc=       117) [Writeback]'h1
+(cyc=       117) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000007c, data: 'haaaaaaaa }'hff010113
+(cyc=       118) [Execute] 'h1
+(cyc=       118) [Fetch] thread=1'h00000080
+Get IReqMem { byte_en: 'h0, addr: 'h0000007c, data: 'haaaaaaaa }
+(cyc=       118) [Writeback]'h0
+(cyc=       118) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000007c, data: 'haaaaaaaa }'hff010113
+(cyc=       119) [Execute] 'h0
+(cyc=       119) [Fetch] thread=0'h00000080
+Get IReqMem { byte_en: 'h0, addr: 'h00000080, data: 'haaaaaaaa }
+(cyc=       119) [Writeback]'h1
+(cyc=       119) [Decode] 'h1
+(cyc=       120) [Execute] 'h1
+(cyc=       120) [Fetch] thread=1'h00000084
+(cyc=       120) [Writeback]'h0
+(cyc=       121) [Writeback]'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000080, data: 'haaaaaaaa }'h00a11133
+(cyc=       146) [Decode] 'h0
+(cyc=       147) [Execute] 'h0
+Get IReqMem { byte_en: 'h0, addr: 'h00000080, data: 'haaaaaaaa }
+Get IResp Mem { byte_en: 'h0, addr: 'h00000080, data: 'haaaaaaaa }'h00a11133
+(cyc=       148) [Fetch] thread=0'h00000084
+Get IReqMem { byte_en: 'h0, addr: 'h00000084, data: 'haaaaaaaa }
+(cyc=       148) [Writeback]'h0
+(cyc=       148) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000084, data: 'haaaaaaaa }'h018010ef
+(cyc=       149) [Execute] 'h1
+(cyc=       149) [Fetch] thread=1'h00000088
+Get IReqMem { byte_en: 'h0, addr: 'h00000084, data: 'haaaaaaaa }
+(cyc=       149) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000084, data: 'haaaaaaaa }'h018010ef
+(cyc=       150) [Execute] 'h0
+(cyc=       150) [Fetch] thread=0'h0000109c
+Get IReqMem { byte_en: 'h0, addr: 'h0000109c, data: 'haaaaaaaa }
+(cyc=       150) [Writeback]'h1
+(cyc=       150) [Decode] 'h1
+(cyc=       151) [Execute] 'h1
+(cyc=       151) [Fetch] thread=1'h000010a0
+(cyc=       151) [Writeback]'h0
+(cyc=       152) [Writeback]'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000109c, data: 'haaaaaaaa }'h00b00513
+(cyc=       177) [Decode] 'h0
+(cyc=       178) [Execute] 'h0
+Get IReqMem { byte_en: 'h0, addr: 'h0000109c, data: 'haaaaaaaa }
+Get IResp Mem { byte_en: 'h0, addr: 'h0000109c, data: 'haaaaaaaa }'h00b00513
+(cyc=       179) [Fetch] thread=0'h000010a0
+Get IReqMem { byte_en: 'h0, addr: 'h000010a0, data: 'haaaaaaaa }
+(cyc=       179) [Writeback]'h0
+(cyc=       179) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h000010a0, data: 'haaaaaaaa }'h00008067
+(cyc=       180) [Execute] 'h1
+(cyc=       180) [Fetch] thread=1'h000010a4
+Get IReqMem { byte_en: 'h0, addr: 'h000010a0, data: 'haaaaaaaa }
+(cyc=       180) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h000010a0, data: 'haaaaaaaa }'h00008067
+(cyc=       181) [Execute] 'h0
+(cyc=       181) [Fetch] thread=0'h00000088
+Get IReqMem { byte_en: 'h0, addr: 'h00000088, data: 'haaaaaaaa }
+(cyc=       181) [Writeback]'h1
+(cyc=       181) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00000088, data: 'haaaaaaaa }'h00000513
+(cyc=       182) [Execute] 'h1
+(cyc=       182) [Fetch] thread=1'h0000008c
+Get IReqMem { byte_en: 'h0, addr: 'h00000088, data: 'haaaaaaaa }
+(cyc=       182) [Writeback]'h0
+(cyc=       182) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00000088, data: 'haaaaaaaa }'h00000513
+(cyc=       183) [Execute] 'h0
+(cyc=       183) [Fetch] thread=0'h0000008c
+Get IReqMem { byte_en: 'h0, addr: 'h0000008c, data: 'haaaaaaaa }
+(cyc=       183) [Writeback]'h1
+(cyc=       183) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000008c, data: 'haaaaaaaa }'h7d9000ef
+(cyc=       184) [Execute] 'h1
+(cyc=       184) [Fetch] thread=1'h00000090
+Get IReqMem { byte_en: 'h0, addr: 'h0000008c, data: 'haaaaaaaa }
+(cyc=       184) [Writeback]'h0
+(cyc=       184) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000008c, data: 'haaaaaaaa }'h7d9000ef
+(cyc=       185) [Execute] 'h0
+(cyc=       185) [Fetch] thread=0'h00001064
+Get IReqMem { byte_en: 'h0, addr: 'h00001064, data: 'haaaaaaaa }
+(cyc=       185) [Writeback]'h1
+(cyc=       185) [Decode] 'h1
+(cyc=       186) [Execute] 'h1
+(cyc=       186) [Fetch] thread=1'h00001068
+(cyc=       186) [Writeback]'h0
+(cyc=       187) [Writeback]'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00001064, data: 'haaaaaaaa }'hfe010113
+(cyc=       212) [Decode] 'h0
+(cyc=       213) [Execute] 'h0
+Get IReqMem { byte_en: 'h0, addr: 'h00001064, data: 'haaaaaaaa }
+Get IResp Mem { byte_en: 'h0, addr: 'h00001064, data: 'haaaaaaaa }'hfe010113
+(cyc=       214) [Fetch] thread=0'h00001068
+Get IReqMem { byte_en: 'h0, addr: 'h00001068, data: 'haaaaaaaa }
+(cyc=       214) [Writeback]'h0
+(cyc=       214) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00001068, data: 'haaaaaaaa }'h00812e23
+(cyc=       215) [Execute] 'h1
+(cyc=       215) [Fetch] thread=1'h0000106c
+Get IReqMem { byte_en: 'h0, addr: 'h00001068, data: 'haaaaaaaa }
+(cyc=       215) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00001068, data: 'haaaaaaaa }'h00812e23
+(cyc=       216) [Execute] 'h0
+(cyc=       216) [Fetch] thread=0'h0000106c
+Get IReqMem { byte_en: 'h0, addr: 'h0000106c, data: 'haaaaaaaa }
+Get DReqMem { byte_en: 'hf, addr: 'h0fffffec, data: 'h00000000 }
+(cyc=       216) [Writeback]'h1
+(cyc=       216) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000106c, data: 'haaaaaaaa }'h02010413
+(cyc=       217) [Execute] 'h1
+(cyc=       217) [Fetch] thread=1'h00001070
+Get IReqMem { byte_en: 'h0, addr: 'h0000106c, data: 'haaaaaaaa }
+(cyc=       217) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000106c, data: 'haaaaaaaa }'h02010413
+(cyc=       218) [Fetch] thread=0'h00001070
+Get IReqMem { byte_en: 'h0, addr: 'h00001070, data: 'haaaaaaaa }
+(cyc=       218) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00001070, data: 'haaaaaaaa }'hfea42623
+(cyc=       219) [Fetch] thread=1'h00001074
+Get IReqMem { byte_en: 'h0, addr: 'h00001070, data: 'haaaaaaaa }
+Get IResp Mem { byte_en: 'hf, addr: 'h0fffffec, data: 'h00000000 }'haaaaaaaa
+(cyc=       243) [Writeback]'h0
+(cyc=       244) [Execute] 'h0
+Get DReqMem { byte_en: 'hf, addr: 'h1fffffdc, data: 'h00000000 }
+Get IResp Mem { byte_en: 'hf, addr: 'h1fffffdc, data: 'h00000000 }'haaaaaaaa
+(cyc=       273) [Writeback]'h1
+(cyc=       274) [Execute] 'h1
+(cyc=       274) [Writeback]'h0
+(cyc=       274) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00001070, data: 'haaaaaaaa }'hfea42623
+(cyc=       275) [Execute] 'h0
+(cyc=       275) [Fetch] thread=0'h00001074
+Get IReqMem { byte_en: 'h0, addr: 'h00001074, data: 'haaaaaaaa }
+Get DReqMem { byte_en: 'hf, addr: 'h0fffffdc, data: 'h00000000 }
+(cyc=       275) [Writeback]'h1
+(cyc=       275) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00001074, data: 'haaaaaaaa }'h00001797
+(cyc=       276) [Execute] 'h1
+(cyc=       276) [Fetch] thread=1'h00001078
+Get IReqMem { byte_en: 'h0, addr: 'h00001074, data: 'haaaaaaaa }
+(cyc=       276) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00001074, data: 'haaaaaaaa }'h00001797
+(cyc=       277) [Fetch] thread=0'h00001078
+Get IReqMem { byte_en: 'h0, addr: 'h00001078, data: 'haaaaaaaa }
+(cyc=       277) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00001078, data: 'haaaaaaaa }'hf9478793
+(cyc=       278) [Fetch] thread=1'h0000107c
+Get IReqMem { byte_en: 'h0, addr: 'h00001078, data: 'haaaaaaaa }
+Get IResp Mem { byte_en: 'hf, addr: 'h0fffffdc, data: 'h00000000 }'haaaaaaaa
+(cyc=       304) [Writeback]'h0
+(cyc=       305) [Execute] 'h0
+Get DReqMem { byte_en: 'hf, addr: 'h1fffffcc, data: 'h00000000 }
+Get IResp Mem { byte_en: 'hf, addr: 'h1fffffcc, data: 'h00000000 }'haaaaaaaa
+(cyc=       334) [Writeback]'h1
+(cyc=       335) [Execute] 'h1
+(cyc=       335) [Writeback]'h0
+(cyc=       335) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00001078, data: 'haaaaaaaa }'hf9478793
+(cyc=       336) [Execute] 'h0
+(cyc=       336) [Fetch] thread=0'h0000107c
+Get IReqMem { byte_en: 'h0, addr: 'h0000107c, data: 'haaaaaaaa }
+(cyc=       336) [Writeback]'h1
+(cyc=       336) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0000107c, data: 'haaaaaaaa }'h0007a783
+(cyc=       337) [Execute] 'h1
+(cyc=       337) [Fetch] thread=1'h00001080
+Get IReqMem { byte_en: 'h0, addr: 'h0000107c, data: 'haaaaaaaa }
+(cyc=       337) [Writeback]'h0
+(cyc=       337) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h0000107c, data: 'haaaaaaaa }'h0007a783
+(cyc=       338) [Execute] 'h0
+(cyc=       338) [Fetch] thread=0'h00001080
+Get IReqMem { byte_en: 'h0, addr: 'h00001080, data: 'haaaaaaaa }
+Get DReqMem { byte_en: 'h0, addr: 'h00002008, data: 'h00000000 }
+(cyc=       338) [Writeback]'h1
+(cyc=       338) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00001080, data: 'haaaaaaaa }'hfec42703
+(cyc=       339) [Execute] 'h1
+(cyc=       339) [Fetch] thread=1'h00001084
+Get IReqMem { byte_en: 'h0, addr: 'h00001080, data: 'haaaaaaaa }
+(cyc=       339) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00001080, data: 'haaaaaaaa }'hfec42703
+(cyc=       340) [Fetch] thread=0'h00001084
+Get IReqMem { byte_en: 'h0, addr: 'h00001084, data: 'haaaaaaaa }
+(cyc=       340) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00001084, data: 'haaaaaaaa }'h00e7a023
+(cyc=       341) [Fetch] thread=1'h00001088
+Get IReqMem { byte_en: 'h0, addr: 'h00001084, data: 'haaaaaaaa }
+Get IResp Mem { byte_en: 'h0, addr: 'h00002008, data: 'h00000000 }'hf000fff8
+(cyc=       365) [Writeback]'h0
+Get DReqMem { byte_en: 'h0, addr: 'h00002008, data: 'h00000000 }
+(cyc=       367) [Execute] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00002008, data: 'h00000000 }'hf000fff8
+Get DReqMem { byte_en: 'h0, addr: 'h0fffffdc, data: 'h00000000 }
+(cyc=       367) [Writeback]'h1
+(cyc=       368) [Execute] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h0fffffdc, data: 'h00000000 }'h00000000
+(cyc=       396) [Writeback]'h0
+(cyc=       396) [Decode] 'h0
+Get IResp Mem { byte_en: 'h0, addr: 'h00001084, data: 'haaaaaaaa }'h00e7a023
+(cyc=       397) [Execute] 'h0
+[Execute] MMIOMem { byte_en: 'hf, addr: 'hf000fff8, data: 'h00000000 }
+(cyc=       397) [Fetch] thread=0'h00001088
+Get IReqMem { byte_en: 'h0, addr: 'h00001088, data: 'haaaaaaaa }
+Get DReqMem { byte_en: 'h0, addr: 'h1fffffcc, data: 'h00000000 }
+Get MMIOReqMem { byte_en: 'hf, addr: 'hf000fff8, data: 'h00000000 }
+RAN CYCLES       397
+Put MMIORespMem { byte_en: 'hf, addr: 'hf000fff8, data: 'h00000000 }
+Get IResp Mem { byte_en: 'h0, addr: 'h1fffffcc, data: 'h00000000 }'h00000000
+(cyc=       424) [Writeback]'h1
+(cyc=       424) [Decode] 'h1
+Get IResp Mem { byte_en: 'h0, addr: 'h00001088, data: 'haaaaaaaa }'hfec42783
+(cyc=       425) [Execute] 'h1
+[Execute] MMIOMem { byte_en: 'hf, addr: 'hf000fff8, data: 'h00000000 }
+(cyc=       425) [Fetch] thread=1'h0000108c
+Get IReqMem { byte_en: 'h0, addr: 'h00001088, data: 'haaaaaaaa }
+Get MMIOReqMem { byte_en: 'hf, addr: 'hf000fff8, data: 'h00000000 }
+RAN CYCLES       425
+detected intel 64bit linux
