@@ -1,5 +1,6 @@
 *.log
 *.sched
+*.so
 output.log
 pipelined.log
 build/
