@@ -1,7 +1,0 @@
-1. The machine goes faster because alternating the threads allows the pipeline to avoid stalling even with RAW dependencies, whereas before we would stall for 1 cycle. The single thread itself is not going any faster but as a whole we are achieving better throughput. 
-
-The screenshot q1.png shows a situation where there is a 1-cycle stall due to a RAW dependency. Our simple processor can effectively hide this drop in overall IPC on the scale of the two programs since the two threads take turns.
-
-2. A load/store miss in one thread will still block the other, because the threads are not allowed to overtake each other (have only one queue.) Memory miss means that the instruction gets enqueued into e2w, but WB does not execute since there is no response from mem, and since there is backpressure on e2w, execute on the other thread can't run, etc. q2.png shows a screenshot. The stall after decode is purely structural and is not the result of a true dependency.
-
-3. The main difference is that we initialize two stacks, one at 0xFFFFFF0 for the thread 0 and one at 0xF000000 for thread 1. We call the same main function, but since the register a0 is initialized differently in the two register files, we know which one is which. And since the stack pointers are different, each thread has its own call stack.
