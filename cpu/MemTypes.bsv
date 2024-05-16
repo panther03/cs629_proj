@@ -76,3 +76,7 @@ function L2ParsedAddress parseL2Address(Bit#(26) address);
         index: address[7:0]
     };
 endfunction
+
+
+// PLACEHOLDER!!
+typedef Bit#(34) Flit;
