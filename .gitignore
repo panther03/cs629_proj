@@ -1,6 +1,7 @@
 *.log
 *.sched
 *.so
+*.vmh
 output.log
 pipelined.log
 build/
