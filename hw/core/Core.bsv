@@ -160,12 +160,14 @@ module mkCore #(Bit#(4) coreId) (Core);
 
             end else if (req.addr[31:4] == 'hfe00_000) begin
                 FlitType ft = case (req.addr[3:0]) 
-                    4'h0: BODY;
-                    4'h4: HEAD;
+                    4'h0: HEAD;
+                    4'h4: BODY;
                     4'h8: TAIL;
                     default: INVALID;
                 endcase;
-                outgoingFlits.enq(Flit { flitType: ft, flitData: req.data});
+                let f = Flit { flitType: ft, flitData: req.data};
+                if (debug) $display("Sending out flit: ", fshow(f));
+                outgoingFlits.enq(f);
             // Write to scratchpad
             end else if (req.addr[31:24] == 'hff) begin
                 if (debug) $display("[c=%d] write to %d, %d", cycle_count, req.addr[13:2], req.data);
