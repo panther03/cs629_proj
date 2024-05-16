@@ -8,6 +8,8 @@ import MemTypes::*;
 import CacheInterface::*;
 import Ehr::*;
 
+import MessageTypes::*;
+
 interface Core;
     // Poll sync register
     method Bool getLocalSync();
@@ -19,7 +21,7 @@ interface Core;
     method ActionValue#(Flit) getFlit();
 endinterface
 
-module mktop_pipelined(Core);
+module mkCore #(Bit#(4) coreId) (Core);
     // Instantiate the dual ported memory
     BRAM_Configure cfg = defaultValue();
     cfg.loadFormat = tagged Binary "zeroScratch.vmh";
@@ -29,6 +31,7 @@ module mktop_pipelined(Core);
     RVIfc rv_core <- mkpipelined;
     FlitEngine fe <- mkFlitEngine();
 
+    FIFOF#(Flit) outgoingFlits <- mkFIFOF;
     Reg#(Mem) ireq <- mkRegU;
     FIFO#(Mem) dreq <- mkPipelineFIFO;
     FIFO#(Mem) mmioreq <- mkFIFO;
@@ -156,13 +159,15 @@ module mktop_pipelined(Core);
         // Read MMIO
         end else if (req.byte_en == 'h0) begin
             if (req.addr == 'hfd00_0000) begin
-                mmioreq.enq(Mem { byte_en: req.byte_en, addr: 32'b0, data: {31'h0, pack(bsp_my_sync)}});
+                mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_my_sync)}});
             // poll all sync start register
             end if (req.addr == 'hfd00_0004) begin
-                mmioreq.enq(Mem { byte_en: req.byte_en, addr: 32'b0, data: {31'h0, pack(bsp_sync_all_start[0])}});
+                mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_sync_all_start[0])}});
             // poll all sync end register
             end if (req.addr == 'hfd00_0008) begin
-                mmioreq.enq(Mem { byte_en: req.byte_en, addr: 32'b0, data: {31'h0, pack(bsp_sync_all_end[0])}});
+                mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_sync_all_end[0])}});
+            end if (req.addr == 'hfd00_000C) begin
+                mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {28'h0, coreId}});
             end else if (req.addr[31:24] == 'hff) begin
                 if (debug) $display("[c=%d] read from %d", cycle_count, req.addr[13:2]);
                 scratch.portA.request.put(BRAMRequest{
@@ -192,7 +197,14 @@ module mktop_pipelined(Core);
     endrule
 
     method Bool getLocalSync();
-        return bsp_my_sync[0];
+        // Why the OR? we are abusing this method a bit.
+        // If the system is ANDing our signal and making sure we are sync'd, then we have sync=1 so the expression is 1.
+        // If we are 0, then the system could be waiting on all syncs to be low. In that case,
+        // we also want to make sure there are no flits in flight. Thus, we OR with the not empty signal: this will prevent prematurely moving on from sync().
+
+        // NOTE: this also assumes that there will be no outgoing flits before sync()!
+        // If that happens, we will be marked as sync'd, which will be disastrous!
+        return bsp_my_sync[0] | outgoingFlits.notEmpty;
     endmethod
 
     method Action setAllSync(Bool startNotFinish);
@@ -206,10 +218,16 @@ module mktop_pipelined(Core);
     method Action putFlit(Flit f);
         // TODO: check the processor ID before we put it to the FE
         // for verificaton purposes (sanity check)
-        fe.putFlit(f);
+        let flitCpuId = pack(f.flitData)[21:18];
+        if (flitCpuId != coreId) begin
+            $fdisplay(stderr, "Received a flit (for %d) which is not for me (%d).. ", flitCpuId, coreId);
+        end else begin
+            fe.putFlit(f);
+        end
     endmethod
 
     method ActionValue#(Flit) getFlit();
-        // TODO when we have the actual flit format
+        let f = outgoingFlits.first(); outgoingFlits.deq();
+        return f;
     endmethod
 endmodule
