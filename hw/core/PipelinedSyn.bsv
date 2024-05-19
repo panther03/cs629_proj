@@ -1,3 +1,6 @@
+// Pipelined processor, more amenable to synthesis version.
+// Removed giant Ehr scoreboard  + regfile.
+
 //`define KONATA_ENABLE
 //`define DEBUG_ENABLE
 
@@ -26,39 +29,6 @@ interface RVIfc;
     method ActionValue#(Mem) getMMIOReq();
     method Action getMMIOResp(Mem a);
 endinterface
-
-interface Scoreboard;
-    method Action insert(Bit#(5) dst);
-    method Action remove(Bit#(5) dst);
-    method ActionValue#(Bool) search1(Bit#(5) src);
-    method ActionValue#(Bool) search2(Bit#(5) src);
-    method ActionValue#(Bool) search3(Bit#(5) src);
-endinterface
-
-// TODO: ask about 2-bit scoreboard/WAW stall
-module mkScoreboardBoolFlags(Scoreboard); 
-    Vector#(32, Ehr#(2, Bool)) ready <- replicateM(mkEhr(True));
-
-    method Action insert(Bit#(5) dst);
-        ready[dst][1] <= False;
-    endmethod
-
-    method Action remove(Bit#(5) dst);
-        ready[dst][0] <= True;
-    endmethod
-
-    method ActionValue#(Bool) search1(Bit#(5) src);
-        return ready[src][1];
-    endmethod
-
-    method ActionValue#(Bool) search2(Bit#(5) src);
-        return ready[src][1];
-    endmethod
-
-     method ActionValue#(Bool) search3(Bit#(5) src);
-        return ready[src][1];
-    endmethod
-endmodule
 
 // typedef struct { Bit#(4) byte_en; Bit#(32) addr; Bit#(32) data; } Mem deriving (Eq, FShow, Bits);
 typedef struct { Bool isUnsigned; Bit#(2) size; Bit#(2) offset; Bool mmio; } MemBusiness deriving (Eq, FShow, Bits);
@@ -99,6 +69,7 @@ typedef struct {
 typedef struct { 
     MemBusiness mem_business;
     Bit#(32) data;
+    Bool data_valid;
     DecodedInst dinst;
     Bool poisoned;
     Bit#(1) thread_id;
@@ -106,6 +77,14 @@ typedef struct {
     KonataId k_id; // <- This is a unique identifier per instructions, for logging purposes
 `endif
 } E2W deriving (Eq, FShow, Bits);
+
+typedef struct {
+    Bit#(32) data;
+    Bool data_valid;
+    Bit#(1) thread_id;
+    Bit#(5) rd_idx;
+    Bool rd_valid;
+} WritebackForward deriving (Eq, FShow, Bits);
 
 (* synthesize *)
 module mkPipelined(RVIfc);
@@ -124,22 +103,25 @@ module mkPipelined(RVIfc);
     Ehr#(2, Bit#(1)) epochT0 <- mkEhr(0);
     Ehr#(2, Bit#(1)) epochT1 <- mkEhr(0);
 
-    Vector#(32, Ehr#(2, Bit#(32))) rfT0 <- replicateM(mkEhr(32'h0000000));
-    // TODO: figure out how to set a1 to 1 here
-    Vector#(32, Ehr#(2, Bit#(32))) rfT1 <- replicateM(mkEhr(32'h0000000));
-    Scoreboard scT0 <- mkScoreboardBoolFlags;
-    Scoreboard scT1 <- mkScoreboardBoolFlags;
+    Vector#(32, Reg#(Bit#(32))) rfT0 <- replicateM(mkReg(32'h0000000));
+    Vector#(32, Reg#(Bit#(32))) rfT1 <- replicateM(mkReg(32'h0000000));
 
     FIFO#(F2D) f2d <- mkFIFO;
     FIFO#(D2E) d2e <- mkFIFO;
     FIFOF#(E2W) e2w <- mkFIFOF;
 
+    Ehr#(3, WritebackForward) wbForward <- mkEhr(unpack(0));
+    // no idea why we can't just use the Ehr[0] for this..
+    Reg#(WritebackForward) wbForwardSave <- mkReg(unpack(0));
+
     Reg#(Bool) starting <- mkReg(True);
 
     rule init_t1_regfile if (starting);
-        rfT1[10][0] <= 1;
+        rfT1[10] <= 1;
         starting <= False;
     endrule
+
+    Reg#(Bit#(32)) cyc <- mkReg(0);
 
 `ifdef KONATA_ENABLE
 	// Code to support Konata visualization
@@ -162,7 +144,7 @@ module mkPipelined(RVIfc);
 `endif
 
 `ifdef DEBUG_ENABLE
-    Reg#(Bit#(32)) cyc <- mkReg(0);
+    
     rule cyc_count_debug;
         cyc <= cyc + 1;
     endrule
@@ -239,12 +221,18 @@ module mkPipelined(RVIfc);
         lastThread <= ~lastThread;
     endrule
 
+    function Bit#(32) forward(Bit#(5) op_idx, Bit#(32) op_default, Bit#(1) thread);
+        let wbForwardRelevant = wbForward[2].rd_valid && (wbForward[2].thread_id == thread);
+        return (op_idx == 0 ? 0 : ((wbForwardRelevant && (wbForward[2].rd_idx == op_idx)) ? wbForward[2].data : op_default));
+    endfunction
+
+    function Bit#(32) forwardExec(Bit#(5) op_idx, Bit#(32) op_default, Bit#(1) thread);
+        let wbForwardRelevant = wbForwardSave.rd_valid &&     (wbForwardSave.thread_id == thread);
+        let wbForwardRelevantByp = wbForward[2].rd_valid && (wbForward[2].thread_id == thread);
+        return (op_idx == 0 ? 0 : ((wbForwardRelevantByp && (wbForward[2].rd_idx == op_idx)) ? wbForward[2].data :((wbForwardRelevant && (wbForwardSave.rd_idx == op_idx)) ? wbForwardSave.data : op_default)));
+    endfunction
+
     rule decode if (!starting);
-        // Check for operands being ready without dequeueing.
-        // RS1 and RS2 need to be ready for RAW hazards,
-        // while we need to wait on RD for a WAR hazard,
-        // which here is only applicable when two insructions write to the same
-        // register back-to-back and then after the register is read.
         let resp = fromImem.first();
         let instr = resp.data;
         let decodedInst = decodeInst(resp.data);
@@ -253,38 +241,32 @@ module mkPipelined(RVIfc);
         let rs1_idx = getInstFields(instr).rs1;
         let rs2_idx = getInstFields(instr).rs2;
         let rd_idx = getInstFields(instr).rd;
-        let rs1_rdy <- (thread == 1) ? scT1.search1(rs1_idx) : scT0.search1(rs1_idx);
-        let rs2_rdy <- (thread == 1) ? scT1.search1(rs2_idx) : scT0.search2(rs2_idx);
-        let rd_rdy <- (thread == 1) ? scT1.search3(rd_idx) : scT0.search3(rd_idx);
+        
+        let wbForwardRelevant = wbForward[2].rd_valid && (wbForward[2].thread_id == thread) ;
+        let rs1_rdy = (rs1_idx == 0) || !wbForwardRelevant || (wbForward[2].data_valid) || (wbForward[2].rd_idx != rs1_idx);
+        let rs2_rdy = (rs2_idx == 0) || !wbForwardRelevant || (wbForward[2].data_valid) || (wbForward[2].rd_idx != rs2_idx);
 
-        //if (debug) $display("(cyc=%d) [Pre-Decode] [%d,%d,%d] ", cyc, rs1_rdy, rs2_rdy, rd_rdy, fshow(getInstFields(instr)));
+`ifdef DEBUG_ENABLE
+        $display("(cyc=%d) [Pre-Decode] [%d,%d,%d] ", cyc, rs1_rdy, rs2_rdy, wbForwardRelevant, fshow(getInstFields(instr)));
+`endif
      
-        if ((rs1_rdy) && (rs2_rdy) && (rd_rdy || !decodedInst.valid_rd)) begin
+        if (rs1_rdy && rs2_rdy) begin
             // Dequeue IMEM result with pipeline register, keeping them in-sync
             fromImem.deq();
             f2d.deq();
 
 `ifdef DEBUG_ENABLE
-            $display("(cyc=%d) [Decode] ", cyc, fshow(thread));
+            $display("(cyc=%d) [Decode] pc=%x ", cyc, fetchedInstr.ppc,fshow(thread));
 `endif
 
+            
             // 0 is hard-wired to 0 val in RISC-V
-            let rs1 = (rs1_idx == 0 ? 0 : ((thread == 1) ? rfT1[rs1_idx][1] : rfT0[rs1_idx][1]));
-            let rs2 = (rs2_idx == 0 ? 0 : ((thread == 1) ? rfT1[rs2_idx][1] : rfT0[rs2_idx][1]));
-
-            // RD is now busy in the scoreboard
-            if (rd_idx != 0 && decodedInst.valid_rd) begin
-                if (thread == 1) begin
-                    scT1.insert(rd_idx);
-                end else begin
-                    scT0.insert(rd_idx);
-                end
-                // $display("(cyc=%d) inserting %d", cyc, rd_idx);
-            end
+            let rs1 = forward(rs1_idx, (((thread == 1) ? rfT1[rs1_idx] : rfT0[rs1_idx])), thread);
+            let rs2 = forward(rs2_idx, (((thread == 1) ? rfT1[rs2_idx] : rfT0[rs2_idx])), thread);
 
 `ifdef KONATA_ENABLE
                 decodeKonata(lfh, fetchedInstr.k_id);
-                labelKonataLeft(lfh,fetchedInstr.k_id, $format("RD=%d | rf[RS1=%d]=%x | rf[RS2=%d]=%d", rd_idx, rs1_idx, rs1, rs2_idx, rs2));
+                /*labelKonataLeft(lfh,fetchedInstr.k_id, $format("RD=%d | rf[RS1=%d]=%x | rf[RS2=%d]=%x", rd_idx, rs1_idx, rs1, rs2_idx, rs2));*/
 `endif
 
             // Ready to execute; enqueue to next pipeline stage
@@ -315,21 +297,28 @@ module mkPipelined(RVIfc);
         let current_id = decodedInstr.k_id;
     	executeKonata(lfh, current_id);
 `endif
-`ifdef DEBUG_ENABLE
-        $display("(cyc=%d) [Execute] ", cyc, fshow(thread));
-`endif
+
 
 		let imm = getImmediate(dInst);
-        let rv1 = decodedInstr.rv1;
-        let rv2 = decodedInstr.rv2;
+        let fields = getInstFields(dInst.inst);
+        let rs1 = fields.rs1;
+        let rv1 = forwardExec(rs1, decodedInstr.rv1, thread);
+        let rs2 = fields.rs2;
+        let rv2 = forwardExec(rs2, decodedInstr.rv2, thread);
 		Bool mmio = False;
         let instr_pc = decodedInstr.ppc; // we reference from the CURRENT (i.e. previous) PC
-		let data = execALU32(dInst.inst, decodedInstr.rv1, decodedInstr.rv2, imm, instr_pc);
+		let data = execALU32(dInst.inst, rv1, rv2, imm, instr_pc);
+        let data_valid = True;
 		let isUnsigned = 0;
-		let funct3 = getInstFields(dInst.inst).funct3;
+		let funct3 = fields.funct3;
 		let size = funct3[1:0];
 		let addr = rv1 + imm;
 		Bit#(2) offset = addr[1:0];
+
+`ifdef DEBUG_ENABLE
+        $display("(cyc=%d) [Execute] pc=%x data=%d; rv1=%d; rv2=%d ", cyc, instr_pc, data, rv1, rv2, fshow(thread));
+`endif
+
 		if (isMemoryInst(dInst)) begin
 			// Technical details for load byte/halfword/word
 		    let shift_amount = {offset, 3'b0};
@@ -340,6 +329,7 @@ module mkPipelined(RVIfc);
 			2'b10: byte_en = 4'b1111 << offset;
 		    endcase
 		    data = rv2 << shift_amount;
+            data_valid = False;
 		    addr = {addr[31:2], 2'b0};
 		    isUnsigned = funct3[2];
 		    let type_mem = (dInst.inst[5] == 1) ? byte_en : 0;
@@ -367,6 +357,7 @@ module mkPipelined(RVIfc);
             labelKonataLeft(lfh,current_id, $format(" (CTRL)"));
 `endif
             data = instr_pc + 4;
+            data_valid = False;
 		end else begin 
 `ifdef KONATA_ENABLE
             labelKonataLeft(lfh,current_id, $format(" (ALU)"));
@@ -400,6 +391,7 @@ module mkPipelined(RVIfc);
         e2w.enq(E2W{
             mem_business: MemBusiness{isUnsigned: unpack(isUnsigned), size: size, offset: offset, mmio: mmio},
             data: data,
+            data_valid: data_valid,
             dinst: dInst,
 `ifdef KONATA_ENABLE
             k_id: current_id,
@@ -421,14 +413,6 @@ module mkPipelined(RVIfc);
         let mem_business = executedInstr.mem_business;
         let poisoned = executedInstr.poisoned;
 
-`ifdef KONATA_ENABLE
-        let current_id = executedInstr.k_id;
-        if (!poisoned) begin
-            writebackKonata(lfh,current_id);
-            retired.enq(current_id);
-        end
-`endif
-
         let fields = getInstFields(dInst.inst);
         if (isMemoryInst(dInst)) begin // (* // write_val *)
             let resp = ?;
@@ -449,9 +433,22 @@ module mkPipelined(RVIfc);
 	     	3'b010 : data = mem_data;
              endcase
 		end
+
+`ifdef KONATA_ENABLE
+        let current_id = executedInstr.k_id;
+        if (!poisoned) begin
+            writebackKonata(lfh,current_id);
+            retired.enq(current_id);
+
+            if (dInst.valid_rd) begin
+              labelKonataLeft(lfh,current_id, $format("RF [%d]=%d", fields.rd, data));
+            end
+        end
+`endif
+
 `ifdef DEBUG_ENABLE
 		if(!poisoned) begin
-             $display("(cyc=%d) [Writeback]", cyc, fshow(thread));
+             $display("(cyc=%d) [Writeback] data=%d t=", cyc, data, fshow(thread));
         end
 `endif
         // TODO: fix this fault logic so bluespec doesnt complain
@@ -463,22 +460,57 @@ module mkPipelined(RVIfc);
             let rd_idx = fields.rd;
             if (rd_idx != 0) begin 
                 if (!poisoned) begin 
-                    if (thread == 1) begin
-                        rfT1[rd_idx][0] <= data;
-                    end else begin
-                        rfT0[rd_idx][0] <= data;
-                    end
+                    wbForward[1] <= WritebackForward {
+                        data: data,
+                        data_valid: True,
+                        thread_id: thread,
+                        rd_idx: rd_idx,
+                        rd_valid: True
+                    };
                 end
                 // $display("(cyc=%d) removing %d", cyc, rd_idx);
-                if (thread == 1) begin
-                    scT1.remove(rd_idx);
-                end else begin
-                    scT0.remove(rd_idx);
-                end
+                // if (thread == 1) begin
+                //     scT1.remove(rd_idx);
+                // end else begin
+                //     scT0.remove(rd_idx);
+                // end
             end
 		end
-
 	endrule
+
+    rule writebackApply if (!starting);
+`ifdef DEBUG_ENABLE
+        $display("Forwarding: ", fshow(wbForward[2]));
+`endif
+        if (wbForward[2].data_valid && wbForward[2].rd_valid) begin
+            let data = wbForward[2].data;
+            let idx = wbForward[2].rd_idx;
+            if (wbForward[2].thread_id == 1) begin
+                rfT1[idx] <= data;
+            end else begin
+                rfT0[idx] <= data;
+            end
+        end
+    endrule
+
+    rule defaultWritebackForward if (!starting);
+        if (e2w.notEmpty()) begin
+            let executedInstr = e2w.first();
+            wbForward[0] <= WritebackForward {
+                data: executedInstr.data,
+                data_valid: executedInstr.data_valid,
+                thread_id: executedInstr.thread_id,
+                rd_idx: getInstFields(executedInstr.dinst.inst).rd,
+                rd_valid: executedInstr.dinst.valid_rd && !executedInstr.poisoned
+            };
+        end else begin
+            wbForward[0] <= unpack(0);
+        end
+    endrule
+
+    rule wbForwardCanonicalize if (!starting);
+        wbForwardSave <= wbForward[2];
+    endrule
 		
 
 	// ADMINISTRATION:
