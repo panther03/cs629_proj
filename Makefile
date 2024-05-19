@@ -1,5 +1,5 @@
-TARGETS := TopPipelined DualCoreTest RouterTestBench
-TARGETSV := $(addsuffix _verilog,$(TARGETS))
+TARGETS := SingleCoreTest DualCoreTest RouterTestBench
+TARGETSV := TopCore
 
 .DEFAULT_GOAL := all
 .PHONY: clean $(TARGETS) $(TARGETSV)
@@ -8,7 +8,7 @@ $(TARGETS):
 	make -f generic.mk BINARY_NAME=$@
 
 $(TARGETSV): 
-	make -f generic.mk BINARY_NAME=$(shell echo $@ | cut -d_ -f1) verilog
+	make -f generic.mk BINARY_NAME=$@ verilog
 
 clean:
 	rm -rf build/

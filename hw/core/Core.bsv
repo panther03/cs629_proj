@@ -17,15 +17,26 @@ import CacheInterface::*;
 import FlitEngine::*;
 import MessageTypes::*;
 
+typedef struct {
+    // TODO: the address doesn't need to be this big for our purposes
+    Bit#(32) addr;
+    Bit#(32) data;
+    Bool write_enable;
+} CoreBusRequest deriving (Bits);
+
 interface Core;
     // Poll sync register
     method Bool getLocalSync();
     // Set all_sync register(s)
     method Action setAllSync(Bool startNotFinish);
-    // Network giving the core a flit
-    method Action putFlit(Flit f);
     // Core sending a flit out to the network
     method ActionValue#(Flit) getFlit();
+    // Network giving the core a flit
+    method Action putFlit(Flit f);
+    // Bus Request
+    method ActionValue#(CoreBusRequest) getBusReq();
+    // Bus Response
+    method Action putBusResp(Bit#(32) resp);
     // Has the core reached a halt
     method Bool getFinished();
 endinterface
@@ -33,12 +44,14 @@ endinterface
 module mkCore #(Bit#(4) coreId) (Core);
     // Instantiate the dual ported memory
     BRAM_Configure cfg = defaultValue();
-    cfg.loadFormat = tagged Binary "zeroScratch.vmh";
-    BRAM2Port#(Bit#(12), Word) scratch <- mkBRAM2Server(cfg); // 32K
+    cfg.loadFormat = tagged Hex "mem.vmh";
+    BRAM2PortBE#(Bit#(12), Word, 4) bram <- mkBRAM2ServerBE(cfg);
 
-    CacheInterface cache <- mkCacheInterface();
     RVIfc rv_core <- mkPipelined;
     FlitEngine fe <- mkFlitEngine();
+
+    FIFO#(CoreBusRequest) busReqs <- mkFIFO;
+    FIFO#(Bit#(32)) busResps <- mkFIFO;
 
     FIFOF#(Flit) outgoingFlits <- mkFIFOF;
     Reg#(Mem) ireq <- mkRegU;
@@ -59,6 +72,7 @@ module mkCore #(Bit#(4) coreId) (Core);
 	    cycle_count <= cycle_count + 1;
     endrule
 
+/*
     rule requestFE;
         let req <- fe.getScratchReq();
         scratch.portB.request.put(BRAMRequest {
@@ -68,13 +82,19 @@ module mkCore #(Bit#(4) coreId) (Core);
             datain: req.data
         });
     endrule
+*/
 
     rule requestI;
         let req <- rv_core.getIReq;
         if (debug) $display("Get IReq", fshow(req));
         ireq <= req;
 
-        cache.sendReqInstr(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data});
+        //cache.sendReqInstr(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data});
+        bram.portB.request.put(BRAMRequestBE{
+                    writeen: req.byte_en,
+                    responseOnWrite: True,
+                    address: truncate(req.addr >> 2),
+                    datain: req.data});
 
             // bram.portB.request.put(BRAMRequestBE{
             //         writeen: req.byte_en,
@@ -84,8 +104,7 @@ module mkCore #(Bit#(4) coreId) (Core);
     endrule
 
     rule responseI;
-        let x <- cache.getRespInstr();
-        // let x <- bram.portB.response.get();
+        let x <- bram.portB.response.get();
         let req = ireq;
         if (debug) $display("Get IResp ", fshow(req), fshow(x));
         req.data = x;
@@ -96,19 +115,19 @@ module mkCore #(Bit#(4) coreId) (Core);
         let req <- rv_core.getDReq;
         dreq.enq(req);
         if (debug) $display("Get DReq", fshow(req));
-        // $display("DATA ",fshow(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data}));
-        cache.sendReqData(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data});
+//        // $display("DATA ",fshow(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data}));
+        //cache.sendReqData(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data});
 
-        // bram.portA.request.put(BRAMRequestBE{
-        //   writeen: req.byte_en,
-        //   responseOnWrite: True,
-        //   address: truncate(req.addr >> 2),
-        //   datain: req.data});
+        bram.portA.request.put(BRAMRequestBE{
+          writeen: req.byte_en,
+          responseOnWrite: True,
+          address: truncate(req.addr >> 2),
+          datain: req.data});
     endrule
 
     rule responseD;
-        // let x <- bram.portA.response.get();
-        let x <- cache.getRespData();
+        let x <- bram.portA.response.get();
+        //let x <- cache.getRespData();
 
         let req = dreq.first;
         dreq.deq();
@@ -122,9 +141,16 @@ module mkCore #(Bit#(4) coreId) (Core);
         if (debug) $display("Get MMIOReq", fshow(req));
 
         // Write MMIO (ignore sub-word MMIO store)
-        if (req.byte_en == 'hf) begin
+        else if (req.byte_en == 'hf) begin
+            // Send out to bus
+            if (req.addr[31:28] == 'he) begin
+                busReqs.enq(CoreBusRequest{
+                    addr: req.addr,
+                    data: req.data,
+                    write_enable: True
+                });
             // putchar()
-            if (req.addr ==  'hf000_fff0) begin
+            end else if (req.addr ==  'hf000_fff0) begin
                 // Writing to STDERR
                 $fwrite(stderr, "%c", req.data[7:0]);
                 $fflush(stderr);
@@ -171,17 +197,23 @@ module mkCore #(Bit#(4) coreId) (Core);
             // Write to scratchpad
             end else if (req.addr[31:24] == 'hff) begin
                 if (debug) $display("[c=%d] write to %d, %d", cycle_count, req.addr[13:2], req.data);
-                scratch.portA.request.put(BRAMRequest{
-                    write: True,
-                    responseOnWrite: False,
-                    address: req.addr[13:2],
-                    datain: req.data
-                });
+                //scratch.portA.request.put(BRAMRequest{
+                //    write: True,
+                //    responseOnWrite: False,
+                //    address: req.addr[13:2],
+                //    datain: req.data
+                //});
             end
             mmioreq.enq(req);
         // Read MMIO
         end else if (req.byte_en == 'h0) begin
-            if (req.addr == 'hfd00_0000) begin
+            if (req.addr[31:28] == 'he) begin
+                busReqs.enq(CoreBusRequest{
+                    addr: req.addr,
+                    data: ?,
+                    write_enable: False
+                });
+            end else if (req.addr == 'hfd00_0000) begin
                 mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_my_sync)}});
             // poll all sync start register
             end if (req.addr == 'hfd00_0004) begin
@@ -193,12 +225,12 @@ module mkCore #(Bit#(4) coreId) (Core);
                 mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {28'h0, coreId}});
             end else if (req.addr[31:24] == 'hff) begin
                 if (debug) $display("[c=%d] read from %d", cycle_count, req.addr[13:2]);
-                scratch.portA.request.put(BRAMRequest{
-                    write: False,
-                    responseOnWrite: False,
-                    address: req.addr[13:2],
-                    datain: ?
-                });    
+                //scratch.portA.request.put(BRAMRequest{
+                //    write: False,
+                //    responseOnWrite: False,
+                //    address: req.addr[13:2],
+                //    datain: ?
+                //});    
             end
         end else begin
             $fdisplay(stderr, "Illegal sub-word MMIO access");
@@ -207,9 +239,14 @@ module mkCore #(Bit#(4) coreId) (Core);
         
     endrule
 
-    rule getScratchResp;
-        let scratchResp <- scratch.portA.response.get();
-        mmioreq.enq(Mem { byte_en: 4'b0, addr: 32'b0, data: scratchResp});
+    //rule getScratchResp;
+    //    let scratchResp <- scratch.portA.response.get();
+    //    mmioreq.enq(Mem { byte_en: 4'b0, addr: 32'b0, data: scratchResp});
+    //endrule
+
+    rule getBusResp;
+        let busResp = busResps.first(); busResps.deq();
+        mmioreq.enq(Mem { byte_en: 4'b0, addr: 32'b0, data: busResp});
     endrule
 
     rule responseMMIO;
@@ -256,5 +293,14 @@ module mkCore #(Bit#(4) coreId) (Core);
 
     method Bool getFinished();
         return count_arrived > 1;
+    endmethod
+
+    method ActionValue#(CoreBusRequest) getBusReq();
+        let f = busReqs.first(); busReqs.deq();
+        return f;
+    endmethod
+
+    method Action putBusResp(Bit#(32) resp);
+        busResps.enq(resp);
     endmethod
 endmodule

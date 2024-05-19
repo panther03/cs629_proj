@@ -71,7 +71,7 @@ function Bool isMMIO(Bit#(32) addr);
         default: False;
     endcase;*/
     // simplifying assumption
-    return addr[31:28] == 4'hF;
+    return addr[31:29] == 3'h7;
 endfunction
 
 typedef struct { Bit#(32) pc;

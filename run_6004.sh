@@ -2,7 +2,7 @@
 cp sw/risc_v_tests/build/$1.vmh ./build/mem.vmh
 python3 tools/arrange_mem.py
 cd ./build/
-./TopPipelined
+./SingleCoreTest
 cd ..
 if arch | grep -q x86_64 && uname -s | grep -q  Linux; then
     echo "detected intel 64bit linux"

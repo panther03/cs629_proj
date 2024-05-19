@@ -1,7 +1,7 @@
 #!/bin/bash
 ./test.sh $1
 cd build
-./TopPipelined
+./SingleCoreTest
 cd ..
 if arch | grep -q x86_64 && uname -s | grep -q  Linux; then
     echo "detected intel 64bit linux"
