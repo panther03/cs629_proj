@@ -1,16 +1,22 @@
+//`define KONATA_ENABLE
+//`define DEBUG_ENABLE
+
 import FIFO::*;
 import FIFOF::*;
 import SpecialFIFOs::*;
 import RegFile::*;
 import RVUtil::*;
 import Vector::*;
+`ifdef KONATA_ENABLE
 import KonataHelper::*;
+`endif
 import Printf::*;
 import Ehr::*;
 
 import CacheInterface::*;
 
 typedef struct { Bit#(4) byte_en; Bit#(32) addr; Bit#(32) data; } Mem deriving (Eq, FShow, Bits);
+
 
 interface RVIfc;
     method ActionValue#(Mem) getIReq();
@@ -72,7 +78,9 @@ typedef struct { Bit#(32) pc;
                  Bit#(32) ppc;
                  Bit#(1) epoch; 
                  Bit#(1) thread_id;
+`ifdef KONATA_ENABLE
                  KonataId k_id; // <- This is a unique identifier per instructions, for logging purposes
+`endif
              } F2D deriving (Eq, FShow, Bits);
 
 typedef struct { 
@@ -83,7 +91,9 @@ typedef struct {
     Bit#(32) rv1; 
     Bit#(32) rv2; 
     Bit#(1) thread_id;
+`ifdef KONATA_ENABLE
     KonataId k_id; // <- This is a unique identifier per instructions, for logging purposes
+`endif
     } D2E deriving (Eq, FShow, Bits);
 
 typedef struct { 
@@ -92,7 +102,9 @@ typedef struct {
     DecodedInst dinst;
     Bool poisoned;
     Bit#(1) thread_id;
+`ifdef KONATA_ENABLE
     KonataId k_id; // <- This is a unique identifier per instructions, for logging purposes
+`endif
 } E2W deriving (Eq, FShow, Bits);
 
 (* synthesize *)
@@ -118,8 +130,18 @@ module mkPipelined(RVIfc);
     Scoreboard scT0 <- mkScoreboardBoolFlags;
     Scoreboard scT1 <- mkScoreboardBoolFlags;
 
-    Reg#(Bit#(32)) cyc <- mkReg(0);
+    FIFO#(F2D) f2d <- mkFIFO;
+    FIFO#(D2E) d2e <- mkFIFO;
+    FIFOF#(E2W) e2w <- mkFIFOF;
 
+    Reg#(Bool) starting <- mkReg(True);
+
+    rule init_t1_regfile if (starting);
+        rfT1[10][0] <= 1;
+        starting <= False;
+    endrule
+
+`ifdef KONATA_ENABLE
 	// Code to support Konata visualization
     String dumpFile = "output.log";
     let lfh <- mkReg(InvalidFile);
@@ -129,30 +151,23 @@ module mkPipelined(RVIfc);
 	FIFO#(KonataId) retired <- mkFIFO;
 	FIFO#(KonataId) squashed <- mkFIFO;
 
-    FIFO#(F2D) f2d <- mkFIFO;
-    FIFO#(D2E) d2e <- mkFIFO;
-    FIFOF#(E2W) e2w <- mkFIFOF;
-
-    Bool debug = False;
-    Reg#(Bool) starting <- mkReg(True);
-	rule do_tic_logging;
+    rule do_tic_logging;
         if (starting) begin
             let f <- $fopen(dumpFile, "w") ;
             lfh <= f;
             $fwrite(f, "Kanata\t0004\nC=\t1\n");
-            starting <= False;
         end
 		konataTic(lfh);
 	endrule
+`endif
 
-    rule init_t1_regfile if (starting);
-        rfT1[10][0] <= 1;
-    endrule
-
-    // TODO: remove debugging logic
+`ifdef DEBUG_ENABLE
+    Reg#(Bit#(32)) cyc <- mkReg(0);
     rule cyc_count_debug;
         cyc <= cyc + 1;
     endrule
+`endif
+
 		
     rule fetchT0 if (!starting && (lastThread == 1));
         // Fetch PC including bypassed result from execute
@@ -166,19 +181,25 @@ module mkPipelined(RVIfc);
         let req = Mem {byte_en: 0, addr: pcT0[1], data: ?};
         toImem.enq(req);
 
+`ifdef KONATA_ENABLE
         // Trigger konata
-        let iid <- fetch1Konata(lfh, fresh_id, 0);
+        let iid <- fetch1Konata(lfh, fresh_id, 1);
         labelKonataLeft(lfh, iid, $format("0x%x: ", pcT0[1]));
+`endif
 
-        if (debug) $display("(cyc=%d) [Fetch] thread=0", cyc, fshow(pcT0[1]));
+`ifdef DEBUG_ENABLE 
+        $display("(cyc=%d) [Fetch] thread=0", cyc, fshow(pcT0[1]));
+`endif
 
         // Enqueue to the next pipeline stage
         f2d.enq(F2D{
             pc: pc_next, // NEXT pc
             ppc: pcT0[1], // PREVIOUS pc
+`ifdef KONATA_ENABLE
+            k_id: iid,
+`endif
             epoch: epochT0[1],
-            thread_id: 0,
-            k_id: iid
+            thread_id: 0
         });
         lastThread <= ~lastThread;
     endrule
@@ -196,18 +217,24 @@ module mkPipelined(RVIfc);
         toImem.enq(req);
 
         // Trigger konata
+`ifdef KONATA_ENABLE
         let iid <- fetch1Konata(lfh, fresh_id, 1);
         labelKonataLeft(lfh, iid, $format("0x%x: ", pcT1[1]));
+`endif
 
-        if (debug) $display("(cyc=%d) [Fetch] thread=1", cyc, fshow(pcT0[1]));
+`ifdef DEBUG_ENABLE 
+        $display("(cyc=%d) [Fetch] thread=1", cyc, fshow(pcT1[1]));
+`endif
 
         // Enqueue to the next pipeline stage
         f2d.enq(F2D{
             pc: pc_next, // NEXT pc
             ppc: pcT1[1], // PREVIOUS pc
+`ifdef KONATA_ENABLE
+            k_id: iid,
+`endif
             epoch: epochT1[1],
-            thread_id: 1,
-            k_id: iid
+            thread_id: 1
         });
         lastThread <= ~lastThread;
     endrule
@@ -237,7 +264,9 @@ module mkPipelined(RVIfc);
             fromImem.deq();
             f2d.deq();
 
-            if (debug) $display("(cyc=%d) [Decode] ", cyc, fshow(thread));
+`ifdef DEBUG_ENABLE
+            $display("(cyc=%d) [Decode] ", cyc, fshow(thread));
+`endif
 
             // 0 is hard-wired to 0 val in RISC-V
             let rs1 = (rs1_idx == 0 ? 0 : ((thread == 1) ? rfT1[rs1_idx][1] : rfT0[rs1_idx][1]));
@@ -253,20 +282,23 @@ module mkPipelined(RVIfc);
                 // $display("(cyc=%d) inserting %d", cyc, rd_idx);
             end
 
-            // To add a decode event in Konata you will likely do something like:
-            decodeKonata(lfh, fetchedInstr.k_id);
-            labelKonataLeft(lfh,fetchedInstr.k_id, $format("RD=%d | rf[RS1=%d]=%x | rf[RS2=%d]=%d", rd_idx, rs1_idx, rs1, rs2_idx, rs2));
+`ifdef KONATA_ENABLE
+                decodeKonata(lfh, fetchedInstr.k_id);
+                labelKonataLeft(lfh,fetchedInstr.k_id, $format("RD=%d | rf[RS1=%d]=%x | rf[RS2=%d]=%d", rd_idx, rs1_idx, rs1, rs2_idx, rs2));
+`endif
 
             // Ready to execute; enqueue to next pipeline stage
             d2e.enq(D2E{
                 dinst: decodedInst,
                 pc: fetchedInstr.pc,
                 ppc: fetchedInstr.ppc,
+`ifdef KONATA_ENABLE
+                k_id: fetchedInstr.k_id,
+`endif
                 epoch: fetchedInstr.epoch,
                 rv1: rs1,
                 rv2: rs2,
-                thread_id: thread,
-                k_id: fetchedInstr.k_id
+                thread_id: thread
             });
         end
     endrule
@@ -278,10 +310,14 @@ module mkPipelined(RVIfc);
         let dInst = decodedInstr.dinst;
         let thread = decodedInstr.thread_id;
 
+`ifdef KONATA_ENABLE
         // Mark instruction in konata
         let current_id = decodedInstr.k_id;
     	executeKonata(lfh, current_id);
-        if (debug) $display("(cyc=%d) [Execute] ", cyc, fshow(thread));
+`endif
+`ifdef DEBUG_ENABLE
+        $display("(cyc=%d) [Execute] ", cyc, fshow(thread));
+`endif
 
 		let imm = getImmediate(dInst);
         let rv1 = decodedInstr.rv1;
@@ -311,20 +347,30 @@ module mkPipelined(RVIfc);
 				       addr : addr,
 				       data : data};
 		    if (isMMIO(addr)) begin 
-		        if (debug) $display("[Execute] MMIO", fshow(req));
+`ifdef DEBUG_ENABLE
+		        $display("[Execute] MMIO", fshow(req));
+`endif
 				toMMIO.enq(req);
+`ifdef KONATA_ENABLE
                 labelKonataLeft(lfh,current_id, $format(" (MMIO)", fshow(req)));
+`endif
     		    mmio = True;
 		    end else begin 
+`ifdef KONATA_ENABLE
                 labelKonataLeft(lfh,current_id, $format(" (MEM)", fshow(req)));
+`endif
     		    toDmem.enq(req);
 		    end
 		end
 		else if (isControlInst(dInst)) begin
+`ifdef KONATA_ENABLE
             labelKonataLeft(lfh,current_id, $format(" (CTRL)"));
+`endif
             data = instr_pc + 4;
 		end else begin 
+`ifdef KONATA_ENABLE
             labelKonataLeft(lfh,current_id, $format(" (ALU)"));
+`endif
 		end
 		let controlResult = execControl32(dInst.inst, rv1, rv2, imm, instr_pc);
 		
@@ -334,7 +380,9 @@ module mkPipelined(RVIfc);
         // scoreboard entry as we would normally.
         let poisoned = False;
         if (((thread == 1) && epochT1[0] != decodedInstr.epoch) || ((thread == 0) && epochT0[0] != decodedInstr.epoch)) begin
+`ifdef KONATA_ENABLE
             squashed.enq(current_id);
+`endif
             poisoned = True;
 
         // Poisoned instructions can't invalidate the epoch!
@@ -353,7 +401,9 @@ module mkPipelined(RVIfc);
             mem_business: MemBusiness{isUnsigned: unpack(isUnsigned), size: size, offset: offset, mmio: mmio},
             data: data,
             dinst: dInst,
+`ifdef KONATA_ENABLE
             k_id: current_id,
+`endif
             thread_id: thread,
             poisoned: poisoned
         });
@@ -367,15 +417,18 @@ module mkPipelined(RVIfc);
         e2w.deq();
         let dInst = executedInstr.dinst;
         let thread = executedInstr.thread_id;
-        let current_id = executedInstr.k_id;
         let data = executedInstr.data;
         let mem_business = executedInstr.mem_business;
         let poisoned = executedInstr.poisoned;
 
+`ifdef KONATA_ENABLE
+        let current_id = executedInstr.k_id;
         if (!poisoned) begin
             writebackKonata(lfh,current_id);
             retired.enq(current_id);
         end
+`endif
+
         let fields = getInstFields(dInst.inst);
         if (isMemoryInst(dInst)) begin // (* // write_val *)
             let resp = ?;
@@ -396,9 +449,11 @@ module mkPipelined(RVIfc);
 	     	3'b010 : data = mem_data;
              endcase
 		end
-		if(debug && !poisoned) begin
+`ifdef DEBUG_ENABLE
+		if(!poisoned) begin
              $display("(cyc=%d) [Writeback]", cyc, fshow(thread));
         end
+`endif
         // TODO: fix this fault logic so bluespec doesnt complain
         //if (!dInst.legal) begin
 		//	if (debug) $display("[Writeback] Illegal Inst, Drop and fault: ", fshow(dInst));
@@ -428,6 +483,7 @@ module mkPipelined(RVIfc);
 
 	// ADMINISTRATION:
 
+`ifdef KONATA_ENABLE
     rule administrative_konata_commit;
 		    retired.deq();
 		    let f = retired.first();
@@ -439,6 +495,7 @@ module mkPipelined(RVIfc);
 		    let f = squashed.first();
 		    squashKonata(lfh, f);
 	endrule
+`endif
 		
     method ActionValue#(Mem) getIReq();
 		toImem.deq();

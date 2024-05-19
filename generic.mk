@@ -8,6 +8,7 @@ $(BUILD_DIR)/$(BINARY_NAME): $(BSV_FILES)
 	bsc $(BSC_FLAGS) $@ -sim -g mk$(BINARY_NAME) -u ./hw/top/$(BINARY_NAME).bsv
 	bsc $(BSC_FLAGS) $@ -sim -e mk$(BINARY_NAME)
 
+verilog: $(BUILD_DIR)/$(BINARY_NAME).v
 $(BUILD_DIR)/$(BINARY_NAME).v:
 	mkdir -p $(BUILD_DIR)
-	bsc -remove-dollar $(BSC_FLAGS) $(BINARY_NAME) -verilog -g mk$(BINARY_NAME)Sized -u ./hw/top/$(BINARY_NAME).bsv
+	bsc -remove-dollar $(BSC_FLAGS) $(BINARY_NAME) -verilog -g mk$(BINARY_NAME) -u ./hw/top/$(BINARY_NAME).bsv

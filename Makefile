@@ -8,7 +8,7 @@ $(TARGETS):
 	make -f generic.mk BINARY_NAME=$@
 
 $(TARGETSV): 
-	make -f generic.mk BINARY_NAME=$@ verilog
+	make -f generic.mk BINARY_NAME=$(shell echo $@ | cut -d_ -f1) verilog
 
 clean:
 	rm -rf build/
