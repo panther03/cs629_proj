@@ -1,5 +1,5 @@
 #!/bin/bash
-cp sw/risc_v_tests/build/$1.vmh ./build/mem.vmh
+cp sw/risc_v_tests/build/$1.vmh ./build/mem.mem
 python3 tools/arrange_mem.py
 cd ./build/
 ./SingleCoreTest

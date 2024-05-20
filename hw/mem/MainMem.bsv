@@ -17,7 +17,7 @@ endinterface
 
 module mkMainMemFast(MainMemFast);
     BRAM_Configure cfg = defaultValue();
-    cfg.loadFormat = tagged Hex "mem.vmh";
+    cfg.loadFormat = tagged Hex "mem.mem";
     BRAM1PortBE#(Bit#(30), Word, 4) bram <- mkBRAM1ServerBE(cfg);
     DelayLine#(10, Word) dl <- mkDL(); // Delay by 20 cycles
 

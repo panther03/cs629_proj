@@ -44,7 +44,7 @@ endinterface
 module mkCore #(Bit#(4) coreId) (Core);
     // Instantiate the dual ported memory
     BRAM_Configure cfg = defaultValue();
-    cfg.loadFormat = tagged Hex "mem.vmh";
+    cfg.loadFormat = tagged Hex "mem.mem";
     BRAM2PortBE#(Bit#(12), Word, 4) bram <- mkBRAM2ServerBE(cfg);
 
     RVIfc rv_core <- mkPipelined;

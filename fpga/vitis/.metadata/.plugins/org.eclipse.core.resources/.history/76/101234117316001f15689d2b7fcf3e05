@@ -1,7 +1,0 @@
-#include "ps7_init.h"
-
-int main() {
-	ps7_init();
-	psu_init();
-	return 0;
-}
