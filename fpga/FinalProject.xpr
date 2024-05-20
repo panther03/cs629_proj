@@ -155,20 +155,17 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
-        <CompFileExtendedInfo CompFileName="TopBD.bd" FileRelPathName="ip/TopBD_CoreWrapper_0_1/TopBD_CoreWrapper_0_1.xci">
-          <Proxy FileSetName="TopBD_CoreWrapper_0_1"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="TopBD.bd" FileRelPathName="ip/TopBD_proc_sys_reset_0_0/TopBD_proc_sys_reset_0_0.xci">
-          <Proxy FileSetName="TopBD_proc_sys_reset_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="TopBD.bd" FileRelPathName="ip/TopBD_axi_uartlite_0_0/TopBD_axi_uartlite_0_0.xci">
-          <Proxy FileSetName="TopBD_axi_uartlite_0_0"/>
+        <CompFileExtendedInfo CompFileName="TopBD.bd" FileRelPathName="ip/TopBD_processing_system7_0_0/TopBD_processing_system7_0_0.xci">
+          <Proxy FileSetName="TopBD_processing_system7_0_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="TopBD.bd" FileRelPathName="ip/TopBD_xbar_0/TopBD_xbar_0.xci">
           <Proxy FileSetName="TopBD_xbar_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="TopBD.bd" FileRelPathName="ip/TopBD_processing_system7_0_0/TopBD_processing_system7_0_0.xci">
-          <Proxy FileSetName="TopBD_processing_system7_0_0"/>
+        <CompFileExtendedInfo CompFileName="TopBD.bd" FileRelPathName="ip/TopBD_axi_uartlite_0_0/TopBD_axi_uartlite_0_0.xci">
+          <Proxy FileSetName="TopBD_axi_uartlite_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="TopBD.bd" FileRelPathName="ip/TopBD_CoreWrapper_0_1/TopBD_CoreWrapper_0_1.xci">
+          <Proxy FileSetName="TopBD_CoreWrapper_0_1"/>
         </CompFileExtendedInfo>
       </File>
       <File Path="$PGENDIR/sources_1/bd/TopBD/hdl/TopBD_wrapper.v">
@@ -298,12 +295,6 @@
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
-    <FileSet Name="TopBD_proc_sys_reset_0_0" Type="BlockSrcs" RelSrcDir="$PSRCDIR/TopBD_proc_sys_reset_0_0" RelGenDir="$PGENDIR/TopBD_proc_sys_reset_0_0">
-      <Config>
-        <Option Name="TopModule" Val="TopBD_proc_sys_reset_0_0"/>
-        <Option Name="UseBlackboxStub" Val="1"/>
-      </Config>
-    </FileSet>
     <FileSet Name="TopBD_CoreWrapper_0_1" Type="BlockSrcs" RelSrcDir="$PSRCDIR/TopBD_CoreWrapper_0_1" RelGenDir="$PGENDIR/TopBD_CoreWrapper_0_1">
       <Config>
         <Option Name="TopModule" Val="TopBD_CoreWrapper_0_1"/>
@@ -364,16 +355,6 @@
       <RQSFiles/>
     </Run>
     <Run Id="TopBD_processing_system7_0_0_synth_1" Type="Ft3:Synth" SrcSet="TopBD_processing_system7_0_0" Part="xc7z010clg400-1" ConstrsSet="TopBD_processing_system7_0_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/TopBD_processing_system7_0_0_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/TopBD_processing_system7_0_0_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/TopBD_processing_system7_0_0_synth_1">
-      <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023"/>
-        <Step Id="synth_design"/>
-      </Strategy>
-      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
-      <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2023"/>
-      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
-      <RQSFiles/>
-    </Run>
-    <Run Id="TopBD_proc_sys_reset_0_0_synth_1" Type="Ft3:Synth" SrcSet="TopBD_proc_sys_reset_0_0" Part="xc7z010clg400-1" ConstrsSet="TopBD_proc_sys_reset_0_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/TopBD_proc_sys_reset_0_0_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/TopBD_proc_sys_reset_0_0_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/TopBD_proc_sys_reset_0_0_synth_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023"/>
         <Step Id="synth_design"/>
@@ -448,23 +429,6 @@
       <RQSFiles/>
     </Run>
     <Run Id="TopBD_processing_system7_0_0_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="TopBD_processing_system7_0_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="TopBD_processing_system7_0_0_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/TopBD_processing_system7_0_0_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/TopBD_processing_system7_0_0_impl_1">
-      <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023"/>
-        <Step Id="init_design"/>
-        <Step Id="opt_design"/>
-        <Step Id="power_opt_design"/>
-        <Step Id="place_design"/>
-        <Step Id="post_place_power_opt_design"/>
-        <Step Id="phys_opt_design"/>
-        <Step Id="route_design"/>
-        <Step Id="post_route_phys_opt_design"/>
-        <Step Id="write_bitstream"/>
-      </Strategy>
-      <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2023"/>
-      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
-      <RQSFiles/>
-    </Run>
-    <Run Id="TopBD_proc_sys_reset_0_0_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="TopBD_proc_sys_reset_0_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="TopBD_proc_sys_reset_0_0_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/TopBD_proc_sys_reset_0_0_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/TopBD_proc_sys_reset_0_0_impl_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023"/>
         <Step Id="init_design"/>

@@ -8,7 +8,7 @@ import Ehr::*;
 
 // local imports
 import RVUtil::*;
-import Pipelined::*;
+import PipelinedSyn::*;
 
 import MemTypes::*;
 import NetworkTypes::*;

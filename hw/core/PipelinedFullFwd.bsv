@@ -1,10 +1,8 @@
-// Pipelined processor, more amenable to synthesis version.
-// Removed giant Ehr scoreboard  + regfile.
+// pipelined processor w/ all forwarding paths, super slow
 
 //`define KONATA_ENABLE
 //`define DEBUG_ENABLE
 
-import Assert::*;
 import FIFO::*;
 import FIFOF::*;
 import SpecialFIFOs::*;
@@ -81,13 +79,11 @@ typedef struct {
 
 typedef struct {
     Bit#(32) data;
-    // it's actually unecessary, as this is an invariant; we don't try to forward invalid data
     Bool data_valid;
     Bit#(1) thread_id;
     Bit#(5) rd_idx;
     Bool rd_valid;
-    Bool is_mem_inst;
-} ForwardingPath deriving (Eq, FShow, Bits);
+} WritebackForward deriving (Eq, FShow, Bits);
 
 (* synthesize *)
 module mkPipelined(RVIfc);
@@ -110,13 +106,12 @@ module mkPipelined(RVIfc);
     Vector#(32, Reg#(Bit#(32))) rfT1 <- replicateM(mkReg(32'h0000000));
 
     FIFO#(F2D) f2d <- mkFIFO;
-    FIFOF#(D2E) d2e <- mkFIFOF;
+    FIFO#(D2E) d2e <- mkFIFO;
     FIFOF#(E2W) e2w <- mkFIFOF;
 
-    Wire#(ForwardingPath) wbForward <- mkWire();
-    RWire#(ForwardingPath) wbForwardOvr <- mkRWire();
-    Reg#(ForwardingPath) wbForwardR <- mkReg(unpack(0));
-    Wire#(ForwardingPath) exForward <- mkWire;
+    Ehr#(3, WritebackForward) wbForward <- mkEhr(unpack(0));
+    // no idea why we can't just use the Ehr[0] for this..
+    Reg#(WritebackForward) wbForwardSave <- mkReg(unpack(0));
 
     Reg#(Bool) starting <- mkReg(True);
 
@@ -225,8 +220,15 @@ module mkPipelined(RVIfc);
         lastThread <= ~lastThread;
     endrule
 
-    function Bool prodMatches(ForwardingPath fp, Bit#(5) op_idx, Bit#(1) thread);
-        return (op_idx != 0) && (fp.rd_valid) && (fp.thread_id == thread) && (fp.rd_idx == op_idx);
+    function Bit#(32) forward(Bit#(5) op_idx, Bit#(32) op_default, Bit#(1) thread);
+        let wbForwardRelevant = wbForward[2].rd_valid && (wbForward[2].thread_id == thread);
+        return (op_idx == 0 ? 0 : ((wbForwardRelevant && (wbForward[2].rd_idx == op_idx)) ? wbForward[2].data : op_default));
+    endfunction
+
+    function Bit#(32) forwardExec(Bit#(5) op_idx, Bit#(32) op_default, Bit#(1) thread);
+        let wbForwardRelevant = wbForwardSave.rd_valid &&     (wbForwardSave.thread_id == thread);
+        let wbForwardRelevantByp = wbForward[2].rd_valid && (wbForward[2].thread_id == thread);
+        return (op_idx == 0 ? 0 : ((wbForwardRelevantByp && (wbForward[2].rd_idx == op_idx)) ? wbForward[2].data :((wbForwardRelevant && (wbForwardSave.rd_idx == op_idx)) ? wbForwardSave.data : op_default)));
     endfunction
 
     rule decode if (!starting);
@@ -239,20 +241,15 @@ module mkPipelined(RVIfc);
         let rs2_idx = getInstFields(instr).rs2;
         let rd_idx = getInstFields(instr).rd;
         
-        //let wbForwardRelevant = wbForward[2].rd_valid && (wbForward[2].thread_id == thread) ;
-        //let rs1_rdy = (rs1_idx == 0) || !wbForwardRelevant || (wbForward[2].data_valid) || (wbForward[2].rd_idx != rs1_idx);
-        //let rs2_rdy = (rs2_idx == 0) || !wbForwardRelevant || (wbForward[2].data_valid) || (wbForward[2].rd_idx != rs2_idx);
-
-        // A load which immediately preceeds this instruction requires 1 bubble.
-        // We let backpressure take care of the rest: By the time we get to execute, we will have the forwarding result
-        // available in either wbForward or wbForwardR.
-        let stall = exForward.is_mem_inst && (prodMatches(exForward, rs1_idx, thread) || prodMatches(exForward, rs2_idx, thread));
+        let wbForwardRelevant = wbForward[2].rd_valid && (wbForward[2].thread_id == thread) ;
+        let rs1_rdy = (rs1_idx == 0) || !wbForwardRelevant || (wbForward[2].data_valid) || (wbForward[2].rd_idx != rs1_idx);
+        let rs2_rdy = (rs2_idx == 0) || !wbForwardRelevant || (wbForward[2].data_valid) || (wbForward[2].rd_idx != rs2_idx);
 
 `ifdef DEBUG_ENABLE
-        $display("(cyc=%d) [Pre-Decode] [stall=%d] ", cyc, stall, fshow(getInstFields(instr)));
+        $display("(cyc=%d) [Pre-Decode] [%d,%d,%d] ", cyc, rs1_rdy, rs2_rdy, wbForwardRelevant, fshow(getInstFields(instr)));
 `endif
      
-        if (!stall) begin
+        if (rs1_rdy && rs2_rdy) begin
             // Dequeue IMEM result with pipeline register, keeping them in-sync
             fromImem.deq();
             f2d.deq();
@@ -260,10 +257,11 @@ module mkPipelined(RVIfc);
 `ifdef DEBUG_ENABLE
             $display("(cyc=%d) [Decode] pc=%x ", cyc, fetchedInstr.ppc,fshow(thread));
 `endif
+
             
             // 0 is hard-wired to 0 val in RISC-V
-            let rs1 = (thread == 1) ? rfT1[rs1_idx] : rfT0[rs1_idx];
-            let rs2 = (thread == 1) ? rfT1[rs2_idx] : rfT0[rs2_idx];
+            let rs1 = forward(rs1_idx, (((thread == 1) ? rfT1[rs1_idx] : rfT0[rs1_idx])), thread);
+            let rs2 = forward(rs2_idx, (((thread == 1) ? rfT1[rs2_idx] : rfT0[rs2_idx])), thread);
 
 `ifdef KONATA_ENABLE
                 decodeKonata(lfh, fetchedInstr.k_id);
@@ -302,25 +300,11 @@ module mkPipelined(RVIfc);
 
 		let imm = getImmediate(dInst);
         let fields = getInstFields(dInst.inst);
-
-        // Forwarding
         let rs1 = fields.rs1;
-        let rv1_wbf_m = prodMatches(wbForward, rs1, thread);
-        let rv1_wbf_r_m = prodMatches(wbForwardR, rs1, thread);
-        let rv1 = rv1_wbf_m ? wbForward.data : (rv1_wbf_r_m ? wbForwardR.data : decodedInstr.rv1);
-
+        let rv1 = forwardExec(rs1, decodedInstr.rv1, thread);
         let rs2 = fields.rs2;
-        let rv2_wbf_m = prodMatches(wbForward, rs2, thread);
-        let rv2_wbf_r_m = prodMatches(wbForwardR, rs2, thread);
-        let rv2 = rv2_wbf_m ? wbForward.data : (rv2_wbf_r_m ? wbForwardR.data : decodedInstr.rv2);
-
-        // verify assumptions
-        dynamicAssert(!rv1_wbf_m || wbForward.data_valid, "RV1 forwarded invalid data from wbForward");
-        dynamicAssert(!rv1_wbf_r_m || wbForwardR.data_valid, "RV1 forwarded invalid data from wbForwardR");
-        dynamicAssert(!rv2_wbf_m || wbForward.data_valid, "RV2 forwarded invalid data from wbForward");
-        dynamicAssert(!rv2_wbf_r_m || wbForwardR.data_valid, "RV2 forwarded invalid data from wbForwardR");
-        
-        Bool mmio = False;
+        let rv2 = forwardExec(rs2, decodedInstr.rv2, thread);
+		Bool mmio = False;
         let instr_pc = decodedInstr.ppc; // we reference from the CURRENT (i.e. previous) PC
 		let data = execALU32(dInst.inst, rv1, rv2, imm, instr_pc);
         let data_valid = True;
@@ -473,60 +457,60 @@ module mkPipelined(RVIfc);
 	    //end
 		if (dInst.valid_rd) begin
             let rd_idx = fields.rd;
-            if (rd_idx != 0 && !poisoned) begin
-                if (thread == 1) begin
-                    rfT1[rd_idx] <= data;
-                end else begin
-                    rfT0[rd_idx] <= data;
+            if (rd_idx != 0) begin 
+                if (!poisoned) begin 
+                    wbForward[1] <= WritebackForward {
+                        data: data,
+                        data_valid: True,
+                        thread_id: thread,
+                        rd_idx: rd_idx,
+                        rd_valid: True
+                    };
                 end
-
-                wbForwardOvr.wset(ForwardingPath {
-                    data: data,
-                    data_valid: True,
-                    thread_id: thread,
-                    rd_idx: rd_idx,
-                    rd_valid: True,
-                    is_mem_inst: ?
-                });
+                // $display("(cyc=%d) removing %d", cyc, rd_idx);
+                // if (thread == 1) begin
+                //     scT1.remove(rd_idx);
+                // end else begin
+                //     scT0.remove(rd_idx);
+                // end
             end
 		end
 	endrule
 
-    rule wbForwardApply if (!starting);
+    rule writebackApply if (!starting);
+`ifdef DEBUG_ENABLE
+        $display("Forwarding: ", fshow(wbForward[2]));
+`endif
+        if (wbForward[2].data_valid && wbForward[2].rd_valid) begin
+            let data = wbForward[2].data;
+            let idx = wbForward[2].rd_idx;
+            if (wbForward[2].thread_id == 1) begin
+                rfT1[idx] <= data;
+            end else begin
+                rfT0[idx] <= data;
+            end
+        end
+    endrule
+
+    rule defaultWritebackForward if (!starting);
         if (e2w.notEmpty()) begin
             let executedInstr = e2w.first();
-            wbForward <= ForwardingPath {
+            wbForward[0] <= WritebackForward {
                 data: executedInstr.data,
                 data_valid: executedInstr.data_valid,
                 thread_id: executedInstr.thread_id,
                 rd_idx: getInstFields(executedInstr.dinst.inst).rd,
-                rd_valid: executedInstr.dinst.valid_rd && !executedInstr.poisoned,
-                is_mem_inst: ?
+                rd_valid: executedInstr.dinst.valid_rd && !executedInstr.poisoned
             };
         end else begin
-            wbForward <= unpack(0);
-        end
-    endrule
-
-    rule exForwardApply if (!starting);
-        if (d2e.notEmpty()) begin
-            let decodedInstr = d2e.first();
-            exForward <= ForwardingPath {
-                data: 0,
-                data_valid: False,
-                thread_id: decodedInstr.thread_id,
-                rd_idx: getInstFields(decodedInstr.dinst.inst).rd,
-                rd_valid: decodedInstr.dinst.valid_rd,
-                is_mem_inst: isMemoryInst(decodedInstr.dinst)
-            };
-        end else begin
-            exForward <= unpack(0);
+            wbForward[0] <= unpack(0);
         end
     endrule
 
     rule wbForwardCanonicalize if (!starting);
-        wbForwardR <= fromMaybe(wbForward, wbForwardOvr.wget());
-    endrule		
+        wbForwardSave <= wbForward[2];
+    endrule
+		
 
 	// ADMINISTRATION:
 
