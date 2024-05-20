@@ -93,7 +93,7 @@ module mkPipelined(RVIfc);
     FIFO#(Mem) fromImem <- mkBypassFIFO;
     FIFO#(Mem) toDmem <- mkBypassFIFO;
     FIFOF#(Mem) fromDmem <- mkBypassFIFOF;
-    FIFO#(Mem) toMMIO <- mkBypassFIFO;
+    FIFO#(Mem) toMMIO <- mkFIFO;
     FIFO#(Mem) fromMMIO <- mkBypassFIFO;
 
     Reg#(Bit#(1)) lastThread <- mkReg(1);

@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x5D126606F702000",
+      "boundary_crc": "0x5D126608FDE5D3A",
       "device": "xc7z010clg400-1",
       "gen_directory": "../../../../FinalProject.gen/sources_1/bd/TopBD",
       "name": "TopBD",
@@ -25,8 +25,8 @@
         }
       },
       "axi_uartlite_0": "",
-      "CoreWrapper_0": "",
-      "proc_sys_reset_0": ""
+      "proc_sys_reset_0": "",
+      "CoreWrapper_0": ""
     },
     "interface_ports": {
       "DDR_0": {
@@ -236,7 +236,7 @@
             "value": "10.000000"
           },
           "PCW_ACT_FPGA0_PERIPHERAL_FREQMHZ": {
-            "value": "100.000000"
+            "value": "40.000000"
           },
           "PCW_ACT_FPGA1_PERIPHERAL_FREQMHZ": {
             "value": "10.000000"
@@ -290,7 +290,7 @@
             "value": "111.111115"
           },
           "PCW_CLK0_FREQ": {
-            "value": "100000000"
+            "value": "40000000"
           },
           "PCW_CLK1_FREQ": {
             "value": "10000000"
@@ -308,7 +308,7 @@
             "value": "1"
           },
           "PCW_FPGA0_PERIPHERAL_FREQMHZ": {
-            "value": "100"
+            "value": "40"
           },
           "PCW_FPGA_FCLK0_ENABLE": {
             "value": "1"
@@ -845,6 +845,12 @@
         "xci_path": "ip/TopBD_axi_uartlite_0_0/TopBD_axi_uartlite_0_0.xci",
         "inst_hier_path": "axi_uartlite_0"
       },
+      "proc_sys_reset_0": {
+        "vlnv": "xilinx.com:ip:proc_sys_reset:5.0",
+        "xci_name": "TopBD_proc_sys_reset_0_0",
+        "xci_path": "ip/TopBD_proc_sys_reset_0_0/TopBD_proc_sys_reset_0_0.xci",
+        "inst_hier_path": "proc_sys_reset_0"
+      },
       "CoreWrapper_0": {
         "vlnv": "xilinx.com:module_ref:CoreWrapper:1.0",
         "xci_name": "TopBD_CoreWrapper_0_1",
@@ -870,7 +876,7 @@
                 "value_src": "constant"
               },
               "FREQ_HZ": {
-                "value": "100000000",
+                "value": "40000000",
                 "value_src": "user_prop"
               },
               "ID_WIDTH": {
@@ -1080,7 +1086,7 @@
                 "value_src": "constant"
               },
               "FREQ_HZ": {
-                "value": "100000000",
+                "value": "40000000",
                 "value_src": "user_prop"
               },
               "CLK_DOMAIN": {
@@ -1111,12 +1117,6 @@
             }
           }
         }
-      },
-      "proc_sys_reset_0": {
-        "vlnv": "xilinx.com:ip:proc_sys_reset:5.0",
-        "xci_name": "TopBD_proc_sys_reset_0_0",
-        "xci_path": "ip/TopBD_proc_sys_reset_0_0/TopBD_proc_sys_reset_0_0.xci",
-        "inst_hier_path": "proc_sys_reset_0"
       }
     },
     "interface_nets": {
@@ -1178,8 +1178,8 @@
           "axi_interconnect_0/M00_ACLK",
           "axi_uartlite_0/s_axi_aclk",
           "axi_interconnect_0/M01_ACLK",
-          "CoreWrapper_0/M_AXI_ACLK",
-          "proc_sys_reset_0/slowest_sync_clk"
+          "proc_sys_reset_0/slowest_sync_clk",
+          "CoreWrapper_0/M_AXI_ACLK"
         ]
       },
       "processing_system7_0_FCLK_RESET0_N": {

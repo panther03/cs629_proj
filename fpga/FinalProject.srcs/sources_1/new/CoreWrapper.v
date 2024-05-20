@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`default_nettype none
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -96,7 +97,7 @@ module CoreWrapper #(
 	wire respReady;
 
 	mkTopCore iCORE (
-		.CLK(CLK),
+		.CLK(clk),
 		.RST_N(M_AXI_ARESETN),
 		.EN_getBusReq(reqReady),
 		.getBusReq({reqAddr, reqData, reqWr}),
@@ -397,3 +398,4 @@ module SimpleAxiMaster  #(
 	assign respValid = respValid_r;
 	assign respData = respData_r;
 endmodule
+`default_nettype wire
