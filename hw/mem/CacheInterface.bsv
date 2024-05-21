@@ -18,7 +18,7 @@ endinterface
 module mkCacheInterface(CacheInterface);
     let verbose = True;
     MainMem mainMem <- mkMainMem(); 
-    //Cache512 cacheL2 <- mkCache;
+    Cache512 cacheL2 <- mkCache;
     Cache32 cacheI <- mkCache32;
     Cache32 cacheD <- mkCache32;
     FIFO#(L2ReqSource) l2ReqFifo <- mkFIFO;
@@ -28,7 +28,7 @@ module mkCacheInterface(CacheInterface);
         //$display("Putting L1I req: ", fshow(lineReq));
         //assert(lineReq.write == 1'b0);
         l2ReqFifo.enq(I);
-        mainMem.put(lineReq);
+        cacheL2.putFromProc(lineReq);
     endrule
 
     rule connectCacheL1DL2;
@@ -37,17 +37,16 @@ module mkCacheInterface(CacheInterface);
         if (lineReq.write == 1'b0) begin
             l2ReqFifo.enq(D);
         end
-        mainMem.put(lineReq);
+        cacheL2.putFromProc(lineReq);
     endrule
 
     rule connectL2L1DICache;
-        let resp <- mainMem.get;
+        let resp <- cacheL2.getToProc();
         l2ReqFifo.deq(); let req = l2ReqFifo.first();
         if (req == D) cacheD.putFromMem(resp);
         else cacheI.putFromMem(resp);
     endrule
 
-/*
     rule connectCacheDram;
         let lineReq <- cacheL2.getToMem();
         //$display("Putting L2 req: ", fshow(lineReq));
@@ -57,7 +56,7 @@ module mkCacheInterface(CacheInterface);
     rule connectDramCache;
         let resp <- mainMem.get;
         cacheL2.putFromMem(resp);
-    endrule*/
+    endrule
 
     method Action sendReqData(CacheReq req);
         // $display("Putting req: ", fshow(req));

@@ -1,4 +1,4 @@
-`define KONATA_ENABLE
+//`define KONATA_ENABLE
 //`define DEBUG_ENABLE
 
 import FIFO::*;
@@ -13,7 +13,6 @@ import KonataHelper::*;
 import Printf::*;
 import Ehr::*;
 
-import CacheInterface::*;
 
 typedef struct { Bit#(4) byte_en; Bit#(32) addr; Bit#(32) data; } Mem deriving (Eq, FShow, Bits);
 
@@ -108,7 +107,7 @@ typedef struct {
 } E2W deriving (Eq, FShow, Bits);
 
 (* synthesize *)
-module mkPipelined(RVIfc);
+module mkPipelined #(Bool multithreaded) (RVIfc);
     // Interface with memory and devices
     FIFO#(Mem) toImem <- mkBypassFIFO;
     FIFO#(Mem) fromImem <- mkBypassFIFO;
@@ -201,10 +200,10 @@ module mkPipelined(RVIfc);
             epoch: epochT0[1],
             thread_id: 0
         });
-        //lastThread <= ~lastThread;
+        if (multithreaded) lastThread <= ~lastThread;
     endrule
 
-    rule fetchT1 if (!starting && (lastThread == 0));
+    rule fetchT1 if (!starting && multithreaded && (lastThread == 0));
         // Fetch PC including bypassed result from execute
         Bit#(32) pc_next = pcT1[1] + 4;
 
@@ -269,8 +268,8 @@ module mkPipelined(RVIfc);
 `endif
 
             // 0 is hard-wired to 0 val in RISC-V
-            let rs1 = (rs1_idx == 0 ? 0 : ((thread == 1) ? rfT1[rs1_idx][1] : rfT0[rs1_idx][1]));
-            let rs2 = (rs2_idx == 0 ? 0 : ((thread == 1) ? rfT1[rs2_idx][1] : rfT0[rs2_idx][1]));
+            let rs1 = (rs1_idx == 0 ? 0 : ((thread == 1 && multithreaded) ? rfT1[rs1_idx][1] : rfT0[rs1_idx][1]));
+            let rs2 = (rs2_idx == 0 ? 0 : ((thread == 1 && multithreaded) ? rfT1[rs2_idx][1] : rfT0[rs2_idx][1]));
 
             // RD is now busy in the scoreboard
             if (rd_idx != 0 && decodedInst.valid_rd) begin
@@ -463,7 +462,7 @@ module mkPipelined(RVIfc);
             let rd_idx = fields.rd;
             if (rd_idx != 0) begin 
                 if (!poisoned) begin 
-                    if (thread == 1) begin
+                    if (thread == 1 && multithreaded) begin
                         rfT1[rd_idx][0] <= data;
                     end else begin
                         rfT0[rd_idx][0] <= data;

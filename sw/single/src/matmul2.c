@@ -60,23 +60,22 @@ int main()
     expected[0][1] = 0;
     expected[0][2] = 0;
     expected[0][3] = 0;
-    asm volatile("");
-    asm volatile("sw      t1,24(a5)");
+    // asm volatile("");
     asm volatile("li      t1,12");
-    asm volatile("sw      a7,400(a5)");
-    asm volatile("sw      t1,32(a5)");
+    asm volatile("sw      a7,1412(a5)");
+    asm volatile("sw      t1,1416(a5)");
 
     asm volatile("li      t2,13");
     asm volatile("li t3, 8192");
     asm volatile("sw t1,1536(x0)");
-    asm volatile("sw t2,1152(x0)");
+    asm volatile("sw t2,1408(x0)");
     // remove cache lines; different tag
     asm volatile("lw t1,1536(t3)");
-    asm volatile("lw t2,1152(t3)");
+    asm volatile("lw t2,1408(t3)");
 
     int thing;
     asm volatile("li     t0, 6969");
-    asm volatile("lw     t0, 400(a5)");
+    asm volatile("lw     t0, 1416(a5)");
     asm volatile("addi      %0,t0,4" : "=r"(thing));
     if (thing == 6969) {
         exit(1);
@@ -85,7 +84,7 @@ int main()
     // evil forwarding test
     // both instructions will miss because of earlier cache tomfoolery
     asm volatile("lw t0, 1536(x0)");
-    asm volatile("lw t1, 1152(x0)");
+    asm volatile("lw t1, 1408(x0)");
     asm volatile("add %0, t0, t1" : "=r"(thing));
     if (thing != 25) {
         exit(1);
@@ -164,6 +163,7 @@ int main()
     b[3][3] = 6;
 
     int sum;
+    putchar('a');
     for (int i = 0; i < SIZE; i++)
     {
         for (int j = 0; j < SIZE; j++)
@@ -173,7 +173,7 @@ int main()
             {
                 sum += multiply(a[i][k], b[k][j]);
             }
-            //putchar((char)sum+33);
+            putchar((char)sum+33);
             c[i][j] = sum;
         }
     }

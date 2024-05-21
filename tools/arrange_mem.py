@@ -35,7 +35,7 @@ def to_string(list_of_words):
     return "a"*(128-len(output)) + output + "\n"
 
 def main():
-    with open("build/mem.mem") as input, open("build/memlines.vmh", "w") as output:
+    with open("build/mem.mem") as input, open("build/memlines.mem", "w") as output:
         
         current_word = 0
         current_line = []

@@ -5,7 +5,6 @@ import FIFO::*;
 import FIFOF::*;
 import SpecialFIFOs::*;
 import Ehr::*;
-
 // local imports
 import RVUtil::*;
 import PipelinedSyn::*;
@@ -41,13 +40,17 @@ interface Core;
     method Bool getFinished();
 endinterface
 
-module mkCore #(Bit#(4) coreId) (Core);
+module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
+`ifdef CACHE_ENABLE
+    CacheInterface cache <- mkCacheInterface();
+`else
     // Instantiate the dual ported memory
     BRAM_Configure cfg = defaultValue();
     cfg.loadFormat = tagged Hex "mem.mem";
     BRAM2PortBE#(Bit#(12), Word, 4) bram <- mkBRAM2ServerBE(cfg);
+`endif
 
-    RVIfc rv_core <- mkPipelined;
+    RVIfc rv_core <- mkPipelined(multithreaded);
     FlitEngine fe <- mkFlitEngine();
 
     FIFO#(CoreBusRequest) busReqs <- mkFIFO;
@@ -89,22 +92,23 @@ module mkCore #(Bit#(4) coreId) (Core);
         if (debug) $display("Get IReq", fshow(req));
         ireq <= req;
 
-        //cache.sendReqInstr(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data});
+`ifdef CACHE_ENABLE
+        cache.sendReqInstr(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data});
+`else
         bram.portB.request.put(BRAMRequestBE{
                     writeen: req.byte_en,
                     responseOnWrite: True,
                     address: truncate(req.addr >> 2),
                     datain: req.data});
-
-            // bram.portB.request.put(BRAMRequestBE{
-            //         writeen: req.byte_en,
-            //         responseOnWrite: True,
-            //         address: truncate(req.addr >> 2),
-            //         datain: req.data});
+`endif
     endrule
 
     rule responseI;
+`ifdef CACHE_ENABLE
+        let x <- cache.getRespInstr();
+`else
         let x <- bram.portB.response.get();
+`endif
         let req = ireq;
         if (debug) $display("Get IResp ", fshow(req), fshow(x));
         req.data = x;
@@ -115,20 +119,24 @@ module mkCore #(Bit#(4) coreId) (Core);
         let req <- rv_core.getDReq;
         dreq.enq(req);
         if (debug) $display("Get DReq", fshow(req));
-//        // $display("DATA ",fshow(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data}));
-        //cache.sendReqData(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data});
 
+`ifdef CACHE_ENABLE
+        cache.sendReqData(CacheReq{word_byte: req.byte_en, addr: req.addr, data: req.data});
+`else
         bram.portA.request.put(BRAMRequestBE{
           writeen: req.byte_en,
           responseOnWrite: True,
           address: truncate(req.addr >> 2),
           datain: req.data});
+`endif
     endrule
 
     rule responseD;
+`ifdef CACHE_ENABLE
+        let x <- cache.getRespData();
+`else 
         let x <- bram.portA.response.get();
-        //let x <- cache.getRespData();
-
+`endif
         let req = dreq.first;
         dreq.deq();
         if (debug) $display("Get IResp ", fshow(req), fshow(x));
@@ -292,7 +300,7 @@ module mkCore #(Bit#(4) coreId) (Core);
     endmethod
 
     method Bool getFinished();
-        return count_arrived > 1;
+        return count_arrived == 1;
     endmethod
 
     method ActionValue#(CoreBusRequest) getBusReq();

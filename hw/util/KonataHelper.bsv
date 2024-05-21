@@ -57,6 +57,11 @@ function Action executeKonata(File f, KonataId konataCtr);
         $fdisplay(f,"S\t%d\t%d\t%s",konataCtr,0,"E");
     endaction
 endfunction
+function Action memoryKonata(File f, KonataId konataCtr);
+    action
+        $fdisplay(f,"S\t%d\t%d\t%s",konataCtr,0,"M");
+    endaction
+endfunction
 function Action writebackKonata(File f, KonataId konataCtr);
     action
         $fdisplay(f,"S\t%d\t%d\t%s",konataCtr,0,"W");

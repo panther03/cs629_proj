@@ -1,8 +1,8 @@
 import Core::*;
 
 module mkDualCoreTest();
-    Core core0 <- mkCore(0);
-    Core core1 <- mkCore(1);
+    Core core0 <- mkCore(0, False);
+    Core core1 <- mkCore(1, False);
 
     rule updateSync;
         let c0sync = core0.getLocalSync();

@@ -1,6 +1,6 @@
 import Core::*;
 module mkSingleCoreTest(Empty);
-    Core core <- mkCore(0);
+    Core core <- mkCore(0, False);
 
     rule finishSim;
         if (core.getFinished()) $finish;

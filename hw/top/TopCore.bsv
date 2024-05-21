@@ -11,7 +11,7 @@ endinterface
 
 (* synthesize *)
 module mkTopCore(TopCore);
-    Core core <- mkCore(0);   
+    Core core <- mkCore(0, False);   
 
     method ActionValue#(CoreBusRequest) getBusReq();
         let x <- core.getBusReq();
