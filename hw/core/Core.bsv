@@ -43,6 +43,9 @@ endinterface
 module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
 `ifdef CACHE_ENABLE
     CacheInterface cache <- mkCacheInterface();
+    BRAM_Configure cfg = defaultValue();
+    cfg.loadFormat = tagged Binary "zeroScratch.mem";
+    BRAM2Port#(Bit#(12), Word) scratch <- mkBRAM2Server(cfg); // 32K
 `else
     // Instantiate the dual ported memory
     BRAM_Configure cfg = defaultValue();
@@ -75,18 +78,6 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
 	    cycle_count <= cycle_count + 1;
     endrule
 
-/*
-    rule requestFE;
-        let req <- fe.getScratchReq();
-        scratch.portB.request.put(BRAMRequest {
-            write: True,
-            responseOnWrite: False,
-            address: req.addr,
-            datain: req.data
-        });
-    endrule
-*/
-
     rule requestI;
         let req <- rv_core.getIReq;
         if (debug) $display("Get IReq", fshow(req));
@@ -115,6 +106,9 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
         rv_core.getIResp(req);
     endrule
 
+`ifndef CACHE_ENABLE
+(* descending_urgency = "requestFE, requestD" *)
+`endif
     rule requestD;
         let req <- rv_core.getDReq;
         dreq.enq(req);
@@ -143,7 +137,28 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
         req.data = x;
             rv_core.getDResp(req);
     endrule
+
+    // for shared scratch memory, let bluespec schedule behind dmem; this is fine
+    rule requestFE;
+        let req <- fe.getScratchReq();
+`ifdef CACHE_ENABLE
+        scratch.portB.request.put(BRAMRequest {
+            write: True,
+            responseOnWrite: False,
+            address: req.addr,
+            datain: req.data
+        });
+`else
+        bram.portA.request.put(BRAMRequestBE{
+          writeen: 4'hF,
+          responseOnWrite: False,
+          address: req.addr,
+          datain: req.data
+        });
+`endif
+    endrule
   
+  (* descending_urgency = "getBusResp, requestMMIO" *)
     rule requestMMIO;
         let req <- rv_core.getMMIOReq;
         if (debug) $display("Get MMIOReq", fshow(req));
@@ -202,16 +217,19 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
                 let f = Flit { flitType: ft, flitData: req.data};
                 if (debug) $display("Sending out flit: ", fshow(f));
                 outgoingFlits.enq(f);
-            // Write to scratchpad
-            end else if (req.addr[31:24] == 'hff) begin
-                if (debug) $display("[c=%d] write to %d, %d", cycle_count, req.addr[13:2], req.data);
-                //scratch.portA.request.put(BRAMRequest{
-                //    write: True,
-                //    responseOnWrite: False,
-                //    address: req.addr[13:2],
-                //    datain: req.data
-                //});
             end
+`ifdef CACHE_ENABLE
+            // Write to scratchpad
+            else if (req.addr[31:24] == 'hff) begin
+                if (debug) $display("[c=%d] write to %d, %d", cycle_count, req.addr[13:2], req.data);
+                scratch.portA.request.put(BRAMRequest{
+                    write: True,
+                    responseOnWrite: False,
+                    address: req.addr[13:2],
+                    datain: req.data
+                });
+            end
+`endif
             mmioreq.enq(req);
         // Read MMIO
         end else if (req.byte_en == 'h0) begin
@@ -231,26 +249,31 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
                 mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_sync_all_end[0])}});
             end if (req.addr == 'hfd00_000C) begin
                 mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {28'h0, coreId}});
-            end else if (req.addr[31:24] == 'hff) begin
+            end 
+`ifdef CACHE_ENABLE 
+                else if (req.addr[31:24] == 'hff) begin
                 if (debug) $display("[c=%d] read from %d", cycle_count, req.addr[13:2]);
-                //scratch.portA.request.put(BRAMRequest{
-                //    write: False,
-                //    responseOnWrite: False,
-                //    address: req.addr[13:2],
-                //    datain: ?
-                //});    
+                scratch.portA.request.put(BRAMRequest{
+                    write: False,
+                    responseOnWrite: False,
+                    address: req.addr[13:2],
+                    datain: ?
+                });    
             end
+`endif
         end else begin
             $fdisplay(stderr, "Illegal sub-word MMIO access");
             $finish;
         end
-        
     endrule
 
-    //rule getScratchResp;
-    //    let scratchResp <- scratch.portA.response.get();
-    //    mmioreq.enq(Mem { byte_en: 4'b0, addr: 32'b0, data: scratchResp});
-    //endrule
+// this rule doesnt need to exist w/o cache
+`ifdef CACHE_ENABLE
+    rule getScratchResp;
+        let scratchResp <- scratch.portA.response.get();
+        mmioreq.enq(Mem { byte_en: 4'b0, addr: 32'b0, data: scratchResp});
+    endrule
+`endif
 
     rule getBusResp;
         let busResp = busResps.first(); busResps.deq();
@@ -300,7 +323,7 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
     endmethod
 
     method Bool getFinished();
-        return count_arrived == 1;
+        return (multithreaded ? (count_arrived > 1) : (count_arrived == 1));
     endmethod
 
     method ActionValue#(CoreBusRequest) getBusReq();

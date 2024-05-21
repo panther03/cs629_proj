@@ -451,6 +451,9 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
                     labelKonataLeft(lfh,executedInstr.k_id, $format(" (MMIO)", fshow(req)));
     `endif
                 end else begin 
+    `ifdef DEBUG_ENABLE
+                    $display("[Memory] addr=%d", executedInstr.addr);
+    `endif
     `ifdef KONATA_ENABLE
                     labelKonataLeft(lfh,executedInstr.k_id, $format(" (MEM)", fshow(req)));
     `endif

@@ -345,6 +345,9 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
 		    let req = Mem {byte_en : type_mem,
 				       addr : addr,
 				       data : data};
+`ifdef DEBUG_ENABLE
+                $display("[Execute] Memory, addr=%x", addr);
+`endif
 		    if (isMMIO(addr)) begin 
 `ifdef DEBUG_ENABLE
 		        $display("[Execute] MMIO", fshow(req));

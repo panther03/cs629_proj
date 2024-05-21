@@ -6,5 +6,5 @@ if [[ $OSTYPE == 'darwin'* ]]; then
 else
 	head -n -1 sw/smt/build/$1.hex > build/mem.mem
 fi
-cp hw/mem/*.vmh build/
+cp hw/mem/*.mem build/
 python3 tools/arrange_mem.py
