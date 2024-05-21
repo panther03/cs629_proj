@@ -1,4 +1,4 @@
-//`define KONATA_ENABLE
+`define KONATA_ENABLE
 //`define DEBUG_ENABLE
 
 import FIFO::*;
@@ -201,7 +201,7 @@ module mkPipelined(RVIfc);
             epoch: epochT0[1],
             thread_id: 0
         });
-        lastThread <= ~lastThread;
+        //lastThread <= ~lastThread;
     endrule
 
     rule fetchT1 if (!starting && (lastThread == 0));

@@ -66,11 +66,28 @@ int main()
     asm volatile("sw      a7,400(a5)");
     asm volatile("sw      t1,32(a5)");
 
+    asm volatile("li      t2,13");
+    asm volatile("li t3, 8192");
+    asm volatile("sw t1,1536(x0)");
+    asm volatile("sw t2,1152(x0)");
+    // remove cache lines; different tag
+    asm volatile("lw t1,1536(t3)");
+    asm volatile("lw t2,1152(t3)");
+
     int thing;
     asm volatile("li     t0, 6969");
     asm volatile("lw     t0, 400(a5)");
     asm volatile("addi      %0,t0,4" : "=r"(thing));
     if (thing == 6969) {
+        exit(1);
+    }
+
+    // evil forwarding test
+    // both instructions will miss because of earlier cache tomfoolery
+    asm volatile("lw t0, 1536(x0)");
+    asm volatile("lw t1, 1152(x0)");
+    asm volatile("add %0, t0, t1" : "=r"(thing));
+    if (thing != 25) {
         exit(1);
     }
 
