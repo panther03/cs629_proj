@@ -1,0 +1,5 @@
+// TODO: just generate this file from the project.files, this is a mess
+// makefile rule to generate this, depend on project.files and use a python script to convert
+
+// This file typically lists flags required by a large project, e.g. include directories
++librescan +libext+.v+.sv+.vh+.svh -y . -y ../src -y ../src/bluespec -y ../src/bus_arbiter -y ../src/sdram -y ../src/spart -y ../../build
