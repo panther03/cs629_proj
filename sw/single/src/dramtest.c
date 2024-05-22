@@ -3,7 +3,6 @@ volatile int* UARTLITE_TX = (volatile int*)(0xE4000004);
 
 int main () {
     *DRAM_BASE = 0x69696969;
-    
     if (*DRAM_BASE == 0x69696969) {
         *UARTLITE_TX = (int)'a';
     } else {

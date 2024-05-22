@@ -200,7 +200,7 @@ reg [31:0] data_rw;
 reg [31:0] addr_r;
 reg [31:0] addr_rw;
 
-reg respValid_r;
+reg reqReady_rw;
 reg respValid_rw;
 
 always @(posedge clk) begin
@@ -208,12 +208,10 @@ always @(posedge clk) begin
 		state_r <= IDLE;
 		addr_r <= 0;
 		data_r <= 0;
-		respValid_r <= 0;
 	end else begin
 		state_r <= state_rw;
 		addr_r <= addr_rw;
 		data_r <= data_rw;
-		respValid_r <= respValid_rw;
 	end
 end
 
@@ -222,6 +220,7 @@ always @(*) begin
 	data_rw = 0;
 	addr_rw = 0;
 	respValid_rw = 0;
+	reqReady_rw = 0;
 
 	bus_arb_request_rw = 0;
 	bus_mst_addrData_rw = 0;
@@ -235,6 +234,7 @@ always @(*) begin
 	case (state_r)
 		IDLE: begin
 			if (reqValid) begin
+				reqReady_rw = 1;
 				addr_rw = reqAddr;
 				data_rw = reqData;
 				state_rw = reqWr ? READ_REQ : WRITE_REQ;
@@ -259,9 +259,7 @@ always @(*) begin
 			state_rw = bus_endTransaction_i ? IDLE : WRITE_DATA;
 		end
 		READ_RESP: begin
-			// TODO: unsure if bluespec wants me to wait for the ready signal to be asserted before
-			// I assert my go or enable signal.
-			respValid_rw = 1'b1;
+			respValid_rw = respReady;
 			state_rw = respReady ? IDLE : READ_RESP;
 		end
 		WRITE_REQ: begin
@@ -296,9 +294,18 @@ always @(posedge clk) begin
 	bus_mst_dataValid_r <= bus_mst_dataValid_rw;
 end
 
-assign reqReady = (state_r != IDLE);
+assign reqReady = reqReady_rw;
 assign respData = data_r;
-assign respValid = respValid_r;
+assign respValid = respValid_rw;
+
+assign bus_mst_addrData_o = bus_mst_addrData_r;
+assign bus_mst_beginTransaction_o = bus_mst_beginTransaction_r;
+assign bus_mst_burstSize_o = bus_mst_burstSize_r;
+assign bus_mst_byteEnables_o = bus_mst_byteEnables_r;
+assign bus_mst_dataValid_o = bus_mst_dataValid_r;
+assign bus_mst_endTransaction_o = bus_mst_endTransaction_r;
+assign bus_mst_busy_o = 1'b0;
+assign bus_mst_readNWrite_o = bus_mst_readNWrite_r;
 endmodule
 
 `default_nettype wire
