@@ -23,6 +23,7 @@ module mkCacheInterface(CacheInterface);
     Cache32 cacheD <- mkCache32;
     FIFO#(L2ReqSource) l2ReqFifo <- mkFIFO;
 
+(* descending_urgency = "connectCacheL1IL2, connectCacheL1DL2" *)
     rule connectCacheL1IL2;
         let lineReq <- cacheI.getToMem();
         //$display("Putting L1I req: ", fshow(lineReq));

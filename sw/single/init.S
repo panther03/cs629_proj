@@ -4,6 +4,8 @@
 # define SREG sw
 # define REGBYTES 4
 
+#define stack_start 0x3800 - 4
+
 .section ".text.init"
 #  .text
 #  .align 6
@@ -41,7 +43,7 @@ _start:
   li  x30,0
   li  x31,0
 
-  li sp, 0xFFFFFF0
+  li sp, stack_start
   sll sp, sp, x10
 
   call main
@@ -51,6 +53,10 @@ _start:
   call exit
 1:
   j 1b
+  nop
+  nop
+  nop
+  nop
 
 #.section ".tdata.begin"
 #.globl _tdata_begin

@@ -3,7 +3,7 @@ martinch@mit.edu for 6.1920 Spring 2023 final project
 
 Updated by seshan@mit.edu and lasyab@mit.edu to fix some bugs
 
-Converts mem.vmh with Word (32 bits) on each line to a memlines.vmh with a Line (512 bits) on each line.
+Converts mem.mem with Word (32 bits) on each line to a memlines.vmh with a Line (512 bits) on each line.
 
 The lines run right to left, but the words run left to right. Something
 about endianness.
@@ -16,7 +16,7 @@ ABCD
 0000ABCD 00005678 00001234
 
 Strategy:
-    - Iterate through mem.vmh <= 16 lines (Words) at a time
+    - Iterate through mem.mem <= 16 lines (Words) at a time
     - zero-extend each hex to Word length, then concatenate
     - put new line into output as hex
 
@@ -35,7 +35,7 @@ def to_string(list_of_words):
     return "a"*(128-len(output)) + output + "\n"
 
 def main():
-    with open("build/mem.vmh") as input, open("build/memlines.vmh", "w") as output:
+    with open("build/mem.mem") as input, open("build/memlines.mem", "w") as output:
         
         current_word = 0
         current_line = []

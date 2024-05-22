@@ -20,7 +20,7 @@ module mkL1CAU(L1CAU);
     Vector#(TExp#(7), Reg#(L1LineTag)) tagStore <- replicateM(mkReg(0));
     Vector#(TExp#(7), Reg#(Bool)) validStore <- replicateM(mkReg(False));
     BRAM_Configure cfg = defaultValue();
-    cfg.loadFormat = tagged Binary "zero.vmh";
+    cfg.loadFormat = tagged Binary "zero.mem";
     BRAM1PortBE#(Bit#(7), LineData, 64) dataStore <- mkBRAM1ServerBE(cfg);
     BRAM1Port#(Bit#(7), Bool) dirtyStore <- mkBRAM1Server(cfg);
     FIFO#(L1LineTag) tagFifo <- mkFIFO;
