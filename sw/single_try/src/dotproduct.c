@@ -10,6 +10,18 @@ void puts(char* string) {
         string++;
     }
 }
+int multiply(int x, int y)
+{
+    int ret = 0;
+    for (int i = 0; i < 32; i++)
+    {
+        if (((y >> i) & 1) == 1)
+        {
+            ret += (x << i);
+        }
+    }
+    return ret;
+}
 
 int main(int a) {
     if (a == 1) { return 1; }
@@ -33,7 +45,7 @@ int main(int a) {
     if (cpuid != 0) {							// all the cpus apart from 0 start calculation
 	    *(SCRATCH_START+8)=0; 
 	    for (int* scratch_ptr = SCRATCH_START; scratch_ptr < SCRATCH_START + 4; scratch_ptr++) {	// results is overwritten to (SCRATCH_START+8)
-		    *(SCRATCH_START+8)=*(SCRATCH_START+8)+(* scratch_ptr)*(*(scratch_ptr+4));
+		    *(SCRATCH_START+8)=*(SCRATCH_START+8)+multiply((* scratch_ptr),(*(scratch_ptr+4)));
 	    } 	     
 	    bsp_put(0, (SCRATCH_START+8), SCRATCH_START+cpuid, 1);	//bsp_put targets the same core but different address as according to their ID from SCRATCH_START
     }
