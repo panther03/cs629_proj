@@ -10,7 +10,7 @@ ELF32=$(addsuffix 32,$(ELF))
 HEX32=$(addsuffix .hex,$(ELF32))
 ELF2HEX=../../tools/elf2hex
 
-RISCVCC32=riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -fno-builtin -static -nostdlib -nostartfiles -mcmodel=medany
+RISCVCC32=riscv32-unknown-elf-gcc -march=rv32i -mabi=ilp32 -fno-builtin -static -nostdlib -nostartfiles -mcmodel=medany
 
 all: $(HEX32)
 
