@@ -1,6 +1,6 @@
 import Core::*;
 
-module mkDualCoreTest();
+module mkFiveCoreTest();
     Core core0 <- mkCore(0, False);
     Core core1 <- mkCore(1, False);
     Core core2 <- mkCore(2, False);

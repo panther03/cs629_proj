@@ -35,8 +35,8 @@ int main(int a) {
     if (cpuid == 0) {
 	
 	for(int i=1;i<5;i=i+1){
-		bsp_put(i, c0_v1data, SCRATCH_START, 4);		//first put the v1 from SCRATCH_START then put the v2 after 4 address.
-		bsp_put(i, c0_v2data, SCRATCH_START+4, 4);		
+		bsp_put(i, c0_v1data+(multiply(4,i-1)), SCRATCH_START, 4);		//first put the v1 from SCRATCH_START then put the v2 after 4 address.
+		bsp_put(i, c0_v2data+(multiply(4,i-1)), SCRATCH_START+4, 4);		
 	}
 
     }
