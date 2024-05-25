@@ -58,7 +58,7 @@ int main(int a) {
     	*SCRATCH_START=0;	
 	for(int i=1;i<5;i=i+1)	*SCRATCH_START=*SCRATCH_START+*(SCRATCH_START+i);
     }
-
+    
     if (cpuid == 0) {							// CPU0 prints the result
         puts(c0_string);
         for (int i = 0; i < 1000; i++) asm volatile ("");

@@ -1,11 +1,19 @@
 import Core::*;
+import FlitEngine::*;
+import MessageTypes::*;
+import NetworkTypes::*;
+import Assert::*;
 
-module mkDualCoreTest();
+module mkFiveCoreTest();
     Core core0 <- mkCore(0, False);
     Core core1 <- mkCore(1, False);
     Core core2 <- mkCore(2, False);
     Core core3 <- mkCore(3, False);
     Core core4 <- mkCore(4, False);
+
+    Reg#(EngineState) state <- mkReg(Idle);
+    Reg#(Bit#(2)) cpuId <- mkReg(0);
+    Reg#(Maybe#(Bit#(2))) route_cpuId <- mkReg(tagged Invalid);
     
     rule updateSync;
         let c0sync = core0.getLocalSync();
@@ -29,31 +37,55 @@ module mkDualCoreTest();
         end
     endrule
 
-    rule core0ToOthers;
+    rule core0ToOthersHead if (state == Idle);
         let f <- core0.getFlit();
-        core1.putFlit(f);
-        core2.putFlit(f);
-        core3.putFlit(f);
-        core4.putFlit(f);
+        dynamicAssert(f.flitType == HEAD, "first packet was not head packet");
+        let flitCpuId = pack(f.flitData)[21:18];
+        state <= Handling;
+        let cpuId_next = (flitCpuId - 1)[1:0];
+        cpuId <= cpuId_next;
+        let thing = case (cpuId_next) 
+            2'h0: core1.putFlit(f);
+            2'h1: core2.putFlit(f);
+            2'h2: core3.putFlit(f);
+            2'h3: core4.putFlit(f);
+        endcase;
+    endrule
+
+    rule core0ToOthersHandle if (state == Handling);
+        let f <- core0.getFlit();
+        if (f.flitType == TAIL) begin
+            state <= Idle;
+        end
+        let thing = case (cpuId) 
+            2'h0: core1.putFlit(f);
+            2'h1: core2.putFlit(f);
+            2'h2: core3.putFlit(f);
+            2'h3: core4.putFlit(f);
+        endcase;
     endrule
     
-    rule xchgFlits1;
+    rule xchgFlits1 if (fromMaybe(2'b00, route_cpuId) == 2'b00);
         let f1 <- core1.getFlit();
+        route_cpuId <= (f1.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b00);
         core0.putFlit(f1);
     endrule	
     
-    rule xchgFlits2;
+    rule xchgFlits2 if (fromMaybe(2'b01, route_cpuId) == 2'b01);
         let f2 <- core2.getFlit();
+        route_cpuId <= (f2.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b01);
         core0.putFlit(f2);
     endrule
 
-    rule xchgFlits3;
+    rule xchgFlits3 if (fromMaybe(2'b10, route_cpuId) == 2'b10);
         let f3 <- core3.getFlit();
+        route_cpuId <= (f3.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b10);
         core0.putFlit(f3);
     endrule
 
-    rule xchgFlits4;
+    rule xchgFlits4 if (fromMaybe(2'b11, route_cpuId) == 2'b11);
         let f4 <- core4.getFlit();
+        route_cpuId <= (f4.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b11);
         core0.putFlit(f4); 
     endrule
 

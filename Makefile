@@ -1,4 +1,4 @@
-TARGETS := SingleCoreTest DualCoreTest RouterTestBench
+TARGETS := SingleCoreTest DualCoreTest FiveCoreTest RouterTestBench
 TARGETSV := TopCore
 
 .DEFAULT_GOAL := all
