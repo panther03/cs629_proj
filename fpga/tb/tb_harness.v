@@ -1,4 +1,5 @@
 // 50mhz clock
+`default_nettype none
 module tb_harness ( input wire clk, input wire rst );
 
     ////////////////////////
@@ -36,3 +37,4 @@ initial begin
     end
 end
 endmodule
+`default_nettype wire

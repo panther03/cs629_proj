@@ -62,7 +62,7 @@ module spart
     if (!rst_n) 
         // TODO default baud rate
         // configured for a 50mhz clock
-        DB <= 13'h01BA;
+        DB <= 13'h01B2;
     else if (divbuffer_reg_write) begin // Write low bit
         DB <= bus_addrData_i[12:0];
     end else

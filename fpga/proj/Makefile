@@ -90,7 +90,7 @@ $(BSV_TOP_PATH):
 	make -C ../../ $(BSV_TOP)
 
 intel_bit: $(PROJECT_SANDBOX) $(BSV_TOP_PATH)
-	@$(make_memory_file)
+	$(make_memory_file)
 	@$(make_intel_bit)
 
 template:

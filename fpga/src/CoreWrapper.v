@@ -141,7 +141,7 @@ module CoreWrapper (
 
 	always @(posedge clk) begin
 		led_r <= (rst) ? 26'h0 : led_r + 1;
-		started <= (rst) ? 1'b1 : (led_r[25] ? 1'b0 : started);
+		started <= (rst) ? 1'b1 : (led_r[3] ? 1'b0 : started);
 	end
 
 	assign leds[0] = 1'b1;
@@ -194,7 +194,6 @@ localparam [3:0] WRITE_DATA = 3'h7;
 reg bus_arb_request_r;
 reg [31:0] bus_mst_addrData_r;
 reg [3:0] bus_mst_byteEnables_r;
-reg [7:0] bus_mst_burstSize_r;
 reg bus_mst_readNWrite_r;
 reg bus_mst_beginTransaction_r;
 reg bus_mst_endTransaction_r;
@@ -203,7 +202,6 @@ reg bus_mst_dataValid_r;
 reg bus_arb_request_rw;
 reg [31:0] bus_mst_addrData_rw;
 reg [3:0] bus_mst_byteEnables_rw;
-reg [7:0] bus_mst_burstSize_rw;
 reg bus_mst_readNWrite_rw;
 reg bus_mst_beginTransaction_rw;
 reg bus_mst_endTransaction_rw;
@@ -243,7 +241,6 @@ always @(*) begin
 	bus_arb_request_rw = 0;
 	bus_mst_addrData_rw = 0;
 	bus_mst_byteEnables_rw = 0;
-	bus_mst_burstSize_rw = 0;
 	bus_mst_readNWrite_rw = 0;
 	bus_mst_beginTransaction_rw = 0;
 	bus_mst_endTransaction_rw = 0;
@@ -263,7 +260,6 @@ always @(*) begin
 		end
 		READ_ADDR: begin
 			bus_mst_addrData_rw = addr_r;
-			bus_mst_burstSize_rw = 8'h1;
 			bus_mst_byteEnables_rw = 4'hF;
 			bus_mst_readNWrite_rw = 1'b1;
 			bus_mst_beginTransaction_rw = 1'b1;
@@ -285,7 +281,6 @@ always @(*) begin
 		end
 		WRITE_ADDR: begin
 			bus_mst_addrData_rw = addr_r;
-			bus_mst_burstSize_rw = 8'h1;
 			bus_mst_byteEnables_rw = 4'hF;
 			bus_mst_readNWrite_rw = 1'b0;
 			bus_mst_beginTransaction_rw = 1'b1;
@@ -304,7 +299,6 @@ always @(posedge clk) begin
 	bus_arb_request_r <= bus_arb_request_rw;
 	bus_mst_addrData_r <= bus_mst_addrData_rw;
 	bus_mst_byteEnables_r <= bus_mst_byteEnables_rw;
-	bus_mst_burstSize_r <= bus_mst_burstSize_rw;
 	bus_mst_readNWrite_r <= bus_mst_readNWrite_rw;
 	bus_mst_beginTransaction_r <= bus_mst_beginTransaction_rw;
 	bus_mst_endTransaction_r <= bus_mst_endTransaction_rw;
@@ -317,7 +311,7 @@ assign respValid = respValid_rw;
 
 assign bus_mst_addrData_o = bus_mst_addrData_r;
 assign bus_mst_beginTransaction_o = bus_mst_beginTransaction_r;
-assign bus_mst_burstSize_o = bus_mst_burstSize_r;
+assign bus_mst_burstSize_o = 8'h0;
 assign bus_mst_byteEnables_o = bus_mst_byteEnables_r;
 assign bus_mst_dataValid_o = bus_mst_dataValid_r;
 assign bus_mst_endTransaction_o = bus_mst_endTransaction_r;

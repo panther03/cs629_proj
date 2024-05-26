@@ -1,3 +1,4 @@
+`default_nettype none
 module sdramController #( parameter [31:0] baseAddress = 32'h00000000,
                           parameter        systemClockInHz = 40000000 ) // supports up to 100MHz
                        ( input wire         clock,
@@ -32,7 +33,9 @@ module sdramController #( parameter [31:0] baseAddress = 32'h00000000,
                          output reg  [1:0]  sdramDqmN,
                          output reg  [12:0] sdramAddr,
                          output reg  [1:0]  sdramBa,
-                         inout wire [15:0]  sdramData);
+                         output wire [15:0]  sdramDataOut,
+                         output wire  sdramDataDriven,
+                         input wire [15:0]  sdramDataIn);
 
   localparam [4:0] RESET_STATE = 5'd0, WAIT_100_MICRO = 5'd1, DO_PRECHARGE = 5'd2, WAIT_PRECHARGE = 5'd3, DO_AUTO_REFRESH1 = 5'd4, WAIT_AUTO_REFRESH1 = 5'd5;
   localparam [4:0] DO_AUTO_REFRESH2 = 5'd6, WAIT_AUTO_REFRESH2 = 5'd7, SET_MODE_REG = 5'd8, WAIT_MODE_REG = 5'd9, SET_EXTENDED_MODE_REG = 5'd10, WAIT_EXTENDED_MODE_REG = 5'd11;
@@ -304,7 +307,8 @@ module sdramController #( parameter [31:0] baseAddress = 32'h00000000,
   
   assign sdramClk = s_sdramClkReg;
   assign s_readData = {s_wordHiReg,s_wordLoReg};
-  assign sdramData = (s_sdramEnableDataOutReg == 1'b1) ? s_sdramDataOutReg : {16{1'bZ}};
+  assign sdramDataDriven =  (s_sdramEnableDataOutReg == 1'b1);
+  assign sdramDataOut = s_sdramDataOutReg;
   
   always @(posedge clock)
     begin
@@ -317,7 +321,7 @@ module sdramController #( parameter [31:0] baseAddress = 32'h00000000,
     begin
       s_sdramClkReg       <= (reset == 1'b1) ? 1'b1 : ~s_sdramClkReg;
       sdramCke            <= ~reset;
-      s_sdramDataReg      <= (s_sdramCurrentState == DO_READ && s_sdramClkReg == 1'b0) ? sdramData : s_sdramDataReg;
+      s_sdramDataReg      <= (s_sdramCurrentState == DO_READ && s_sdramClkReg == 1'b0) ? sdramDataIn : s_sdramDataReg;
       s_sdramDataValidReg <= (reset == 1'b1) ? 1'b0 : (s_sdramCurrentState == DO_READ && s_sdramClkReg == 1'b1) ? ~s_shortCountIsZero : (s_sdramClkReg == 1'b1) ? 1'b0 : s_sdramDataValidReg;
       s_dataToRamReg      <= (reset == 1'b1) ? 32'd0 : (s_sdramCurrentState == INIT_WORD_WRITE && s_sdramClkReg == 1'b1) ? s_busDataReg : s_dataToRamReg;
       if (reset == 1'b1)
@@ -345,3 +349,4 @@ module sdramController #( parameter [31:0] baseAddress = 32'h00000000,
         end
     end
 endmodule
+`default_nettype wire
