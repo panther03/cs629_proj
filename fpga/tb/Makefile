@@ -38,7 +38,7 @@ VERILATOR_FLAGS += -cc --exe
 # Optimize
 VERILATOR_FLAGS += -x-assign fast
 # Warn abount lint issues; may not want this on less solid designs
-VERILATOR_FLAGS += --timing -Wno-lint -Wno-style -Wno-MULTIDRIVEN -Wno-COMBDLY -Wno-TIMESCALEMOD -Wno-UNOPTFLAT
+VERILATOR_FLAGS += --timing -Wno-ZERODLY -Wno-lint -Wno-style -Wno-MULTIDRIVEN -Wno-COMBDLY -Wno-TIMESCALEMOD -Wno-UNOPTFLAT
 # Make waveforms
 VERILATOR_FLAGS += --trace
 # Check SystemVerilog assertions
@@ -51,6 +51,8 @@ VERILATOR_FLAGS += --trace
 #VERILATOR_FLAGS += --gdbbt
 
 TOP = tb_harness
+
+PROGRAM ?= uarttest32
 
 # Input files for Verilator
 VERILATOR_INPUT = $(TOP).v uartdpi.c sim_main.cpp -f input.vc
@@ -72,6 +74,10 @@ run:
 #	$(MAKE) -j -C obj_dir -f Vtop.mk
 # 3. Or, call a submakefile where we can override the rules ourselves
 	$(MAKE) -j -C obj_dir -f V$(TOP).mk
+
+	@echo 
+	@echo "-- COPY PROGRAM ------------"
+	cp -f ../../sw/single/build/$(PROGRAM).hex ./mem.mem
 
 	@echo
 	@echo "-- RUN ---------------------"

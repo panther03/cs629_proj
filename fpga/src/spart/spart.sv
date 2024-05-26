@@ -19,6 +19,8 @@ module spart
     output bus_busy_o,
     output bus_error_o,
 
+    output led,
+
     output TX,				      // UART TX line
     input RX				      // UART RX line
 );
@@ -35,19 +37,21 @@ module spart
             reg_addr <= bus_addrData_i[3:2];
             // only enable when already disabled
             cmd_en <= ~cmd_en & bus_beginTransaction_i & (bus_addrData_i[23:20] == 4'hF);
-            cmd_wr <= bus_readNWrite_i;
+            cmd_wr <= ~bus_readNWrite_i;
         end
     end
 
     localparam ADDR_DATABUF = 2'h0;
     localparam ADDR_DIVBUF = 2'h1;
     localparam ADDR_STATUS = 2'h2;
+    localparam ADDR_LED = 2'h3;
 
     // Decode read/write request
     wire databuffer_reg_write = cmd_en && reg_addr == ADDR_DATABUF && cmd_wr;
     wire databuffer_reg_read = cmd_en && reg_addr == ADDR_DATABUF && ~cmd_wr;
     wire status_reg_read = cmd_en && reg_addr == ADDR_STATUS;
     wire divbuffer_reg_write = cmd_en && reg_addr == ADDR_DIVBUF && cmd_wr;
+    wire led_write = cmd_en && (reg_addr ==  ADDR_LED) && cmd_wr;
 
     wire tx_q_empty_n;
     wire rx_q_full_n;
@@ -58,7 +62,7 @@ module spart
     if (!rst_n) 
         // TODO default baud rate
         // configured for a 50mhz clock
-        DB <= 13'h01B2;
+        DB <= 13'h01BA;
     else if (divbuffer_reg_write) begin // Write low bit
         DB <= bus_addrData_i[12:0];
     end else
@@ -174,6 +178,13 @@ module spart
     logic [7:0] status_reg;
     assign status_reg[7:4] = tx_q_full ? 0 : 8 - (tx_new_ptr - tx_old_ptr); // Number of entries remaining in tx queue
     assign status_reg[3:0] = rx_q_empty ? 0 : rx_new_ptr - rx_old_ptr; // Number of entries filled in rq queue
+
+    reg led_r = 1'b0;
+
+    always @(posedge clk) begin
+        led_r <= (rst_n) ? (led_write ? (bus_addrData_i[0]) : led_r) : 1'b0;
+    end
+	 assign led = ~led_r;
     
     assign bus_busy_o = 1'b0;
     assign bus_error_o = 1'b0;

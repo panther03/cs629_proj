@@ -2,10 +2,11 @@
 `default_nettype none
 module CoreWrapper (
 		input wire clk,
-		input wire rst_n,
+		input wire rst,
 		output wire uart_tx,
 		input wire uart_rx,
-		output wire finished
+		output wire finished,
+		output wire [4:0] leds
     );
 
 	////////////////////
@@ -37,7 +38,7 @@ module CoreWrapper (
 
 	mkTopCore iCORE (
 		.CLK(clk),
-		.RST_N(rst_n),
+		.RST_N(~rst),
 		.EN_getBusReq(reqReady),
 		.getBusReq({reqAddr, reqData, reqWr}),
 		.RDY_getBusReq(reqValid),
@@ -64,7 +65,7 @@ module CoreWrapper (
 
 	CpuBusMaster iCPU_MASTER (
 		.clk(clk),
-		.rst_n(rst_n),
+		.rst_n(~rst),
 		.reqValid(reqValid),
 		.reqReady(reqReady),
 		.reqWr(reqWr),
@@ -98,10 +99,12 @@ module CoreWrapper (
 	wire spart_out_dataValid;
 	wire spart_out_busy;
 	wire spart_out_error;
+	
+	wire thing;
 
 	spart iSPART (
 		.clk(clk),
-		.rst_n(rst_n),
+		.rst_n(~rst),
 		.bus_addrData_i(bus_addrData),
 		.bus_byteEnables_i(bus_byteEnables),
 		.bus_burstSize_i(bus_burstSize),
@@ -114,6 +117,7 @@ module CoreWrapper (
 		.bus_dataValid_o(spart_out_dataValid),
 		.bus_busy_o(spart_out_busy),
 		.bus_error_o(spart_out_error),
+		.led(thing),
 		.TX(uart_tx),
 		.RX(uart_rx)
 	);
@@ -131,6 +135,20 @@ module CoreWrapper (
 	assign bus_readNWrite = cpu_out_readNWrite;
 	assign bus_dataValid = cpu_out_dataValid | spart_out_dataValid;
 	assign bus_byteEnables = cpu_out_byteEnables;
+
+	reg [25:0] led_r;
+	reg started;
+
+	always @(posedge clk) begin
+		led_r <= (rst) ? 26'h0 : led_r + 1;
+		started <= (rst) ? 1'b1 : (led_r[25] ? 1'b0 : started);
+	end
+
+	assign leds[0] = 1'b1;
+	assign leds[1] = led_r[25];
+	assign leds[2] = thing;
+	assign leds[3] = 1'b0;
+	assign leds[4] = started;
 endmodule
 
 module CpuBusMaster (
@@ -217,8 +235,8 @@ end
 
 always @(*) begin
 	state_rw = state_r;
-	data_rw = 0;
-	addr_rw = 0;
+	data_rw = data_r;
+	addr_rw = addr_r;
 	respValid_rw = 0;
 	reqReady_rw = 0;
 
@@ -230,14 +248,13 @@ always @(*) begin
 	bus_mst_beginTransaction_rw = 0;
 	bus_mst_endTransaction_rw = 0;
 	bus_mst_dataValid_rw = 0;
-
 	case (state_r)
 		IDLE: begin
 			if (reqValid) begin
 				reqReady_rw = 1;
 				addr_rw = reqAddr;
 				data_rw = reqData;
-				state_rw = reqWr ? READ_REQ : WRITE_REQ;
+				state_rw = reqWr ? WRITE_REQ : READ_REQ;
 			end
 		end
 		READ_REQ: begin
@@ -256,7 +273,7 @@ always @(*) begin
 			if (bus_dataValid_i) begin
 				data_rw = bus_addrData_i;
 			end
-			state_rw = bus_endTransaction_i ? IDLE : WRITE_DATA;
+			state_rw = bus_endTransaction_i ? READ_RESP : READ_DATA;
 		end
 		READ_RESP: begin
 			respValid_rw = respReady;

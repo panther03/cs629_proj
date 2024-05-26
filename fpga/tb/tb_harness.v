@@ -9,7 +9,7 @@ module tb_harness ( input wire clk, input wire rst );
 
     CoreWrapper iCORE(
         .clk(clk), 
-        .rst_n(~rst),
+        .rst(rst),
         .uart_tx(uart_tx),
         .uart_rx(uart_rx)
     );
