@@ -1,5 +1,5 @@
-TARGETS := TopPipelined RouterTestBench
-TARGETSV := $(addsuffix _verilog,$(TARGETS))
+TARGETS := SingleCoreTest DualCoreTest RouterTestBench DualCoreRouterTest DualCoreNoCTest
+TARGETSV := TopCore
 
 .DEFAULT_GOAL := all
 .PHONY: clean $(TARGETS) $(TARGETSV)
