@@ -25,7 +25,7 @@ int main(int a) {
 
     if (cpuid == 0) {
         puts(c0_string);
-    } else {
+    } else if (cpuid == 1) {
         for (int i = 0; i < 1000; i++) asm volatile ("");
         for (int* scratch_ptr = SCRATCH_START; scratch_ptr < SCRATCH_START + 16; scratch_ptr++) {
             putchar(0x30 + *scratch_ptr);

@@ -1,8 +1,8 @@
 #include "../mmio.h"
 #include "../bsp.h"
-
-const int c0_v1data[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-const int c0_v2data[] = {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0};
+ 
+const int c0_v1data[] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
+const int c0_v2data[] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
 
 int multiply(int x, int y)
 {
@@ -24,6 +24,14 @@ void puts(char* string) {
     }
 }
 
+void putint(int a) {
+    int lut[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    for (int i = 1; i < 9; i++) {
+        putchar((lut[0xF & (a >> (32-(i<<2)))]));
+    }
+    putchar('\n');
+}
+
 int main(int a) {
     if (a == 1) { return 1; }
     const char* c0_string = "Core 0: Finished";
@@ -39,9 +47,11 @@ int main(int a) {
 		bsp_put(i, c0_v1data, SCRATCH_START, 4);		//first put the v1 from SCRATCH_START then put the v2 after 4 address.
 		bsp_put(i, c0_v2data, SCRATCH_START+4, 4);		
 	}
+    bsp_dump(64);
 
     }
     bsp_sync();
+    return;
     
     if (cpuid != 0) {							// all the cpus apart from 0 start calculation
 	    *(SCRATCH_START+8)=0; 
