@@ -6,7 +6,7 @@ BSV_FILES=$(shell find hw -name "*.bsv" -type f)
 $(BUILD_DIR)/$(BINARY_NAME): $(BSV_FILES)
 	mkdir -p $(BUILD_DIR)
 	bsc $(DEFINES) $(BSC_FLAGS) $@ -sim -g mk$(BINARY_NAME) -u ./hw/tb/$(BINARY_NAME).bsv
-	bsc $(DEFINES) $(BSC_FLAGS) $@ -sim -e mk$(BINARY_NAME)
+	bsc $(DEFINES) $(BSC_FLAGS) $@ -parallel-sim-link $(shell nproc) -sim -e mk$(BINARY_NAME)
 
 verilog: $(BUILD_DIR)/$(BINARY_NAME).v
 $(BUILD_DIR)/$(BINARY_NAME).v:

@@ -33,7 +33,9 @@ static void bsp_dump(int len) {
 
 static void bsp_sync() {
     *BSP_MY_SYNC = 1;
+    putchar('a');
     while (!*BSP_ALL_SYNC_START);
+    putchar('b');
     *BSP_ALL_SYNC_START = 0;
 
     int* bspRdPtr = bspQueue;
@@ -48,7 +50,9 @@ static void bsp_sync() {
 
     // copy the buffer
     *BSP_MY_SYNC = 0;
+    putchar('c');
     while (!*BSP_ALL_SYNC_END);
+    putchar('d');
     *BSP_ALL_SYNC_END = 0;
 }
 #endif

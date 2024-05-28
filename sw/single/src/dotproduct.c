@@ -48,13 +48,10 @@ int main(int a) {
 		bsp_put(i, c0_v2data + ((i-1) << 2), SCRATCH_START+4, 4);		
 	}
     //bsp_dump(64);
-
-    } else if (cpuid > 4) {
-        return;
     }
     bsp_sync();
-    //for (int i = 0; i < 1000; i++) asm volatile ("");
-    //return;
+    for (int i = 0; i < 1000; i++) asm volatile ("");
+    return;
     
     if (cpuid != 0) {							// all the cpus apart from 0 start calculation
 	    *(SCRATCH_START+8)=0; 
