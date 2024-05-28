@@ -77,24 +77,28 @@ module mkFiveCoreTest();
     rule xchgFlits1 if (fromMaybe(2'b00, route_cpuId) == 2'b00);
         let f1 <- core1.getFlit();
         route_cpuId <= (f1.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b00);
+        $display("from Core1 to Core0 Flitdata %x Flittype %x ", f1.flitData, f1.flitType);
         core0.putFlit(f1);
     endrule	
     
     rule xchgFlits2 if (fromMaybe(2'b01, route_cpuId) == 2'b01);
         let f2 <- core2.getFlit();
         route_cpuId <= (f2.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b01);
+        $display("from Core2 to Core0 Flitdata %x Flittype %x ", f2.flitData, f2.flitType);
         core0.putFlit(f2);
     endrule
 
     rule xchgFlits3 if (fromMaybe(2'b10, route_cpuId) == 2'b10);
         let f3 <- core3.getFlit();
         route_cpuId <= (f3.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b10);
+        $display("from Core3 to Core0 Flitdata %x Flittype %x ", f3.flitData, f3.flitType);
         core0.putFlit(f3);
     endrule
 
     rule xchgFlits4 if (fromMaybe(2'b11, route_cpuId) == 2'b11);
         let f4 <- core4.getFlit();
         route_cpuId <= (f4.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b11);
+        $display("from Core4 to Core0 Flitdata %x Flittype %x ", f4.flitData, f4.flitType);
         core0.putFlit(f4); 
     endrule
 
