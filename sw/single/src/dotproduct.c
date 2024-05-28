@@ -34,7 +34,7 @@ void putint(int a) {
 
 int main(int a) {
     //if (a == 1) { return 1; }
-    const char* c0_string = "Core 0: Finished";
+    const char* c0_string = "Core 0: Finished\nResult: ";
     const char* c1_string = "Core 1: Finished";
     const char* c2_string = "Core 2: Finished";
     const char* c3_string = "Core 3: Finished";
@@ -43,39 +43,34 @@ int main(int a) {
     
     if (cpuid == 0) {
 	
-	for(int i=1;i<5;i=i+1){
-		bsp_put(i, c0_v1data + ((i-1) << 2), SCRATCH_START, 4);		//first put the v1 from SCRATCH_START then put the v2 after 4 address.
-		bsp_put(i, c0_v2data + ((i-1) << 2), SCRATCH_START+4, 4);		
+	for(int i=1;i<9;i=i+1){
+		bsp_put(i, c0_v1data + ((i-1) << 1), SCRATCH_START, 2);		//first put the v1 from SCRATCH_START then put the v2 after 4 address.
+		bsp_put(i, c0_v2data + ((i-1) << 1), SCRATCH_START+2, 2);		
 	}
     //bsp_dump(64);
     }
     bsp_sync();
-    for (int i = 0; i < 1000; i++) asm volatile ("");
-    return;
-    
+    //for (int i = 0; i < 1000; i++) asm volatile ("");
+    //return;
+    int sum = 0;
     if (cpuid != 0) {							// all the cpus apart from 0 start calculation
-	    *(SCRATCH_START+8)=0; 
-	    for (volatile int* scratch_ptr = SCRATCH_START; scratch_ptr < SCRATCH_START + 4; scratch_ptr++) {	// results is overwritten to (SCRATCH_START+8)
-		    *(SCRATCH_START+8)=*(SCRATCH_START+8)+multiply((* scratch_ptr),(*(scratch_ptr+4)));
+	    for (volatile int* scratch_ptr = SCRATCH_START; scratch_ptr < SCRATCH_START + 2; scratch_ptr++) {	// results is overwritten to (SCRATCH_START+8)
+		    sum += multiply((* scratch_ptr),(*(scratch_ptr+2)));
 	    } 	     
-	    bsp_put(0, (SCRATCH_START+8), SCRATCH_START+cpuid, 1);	//bsp_put targets the same core but different address as according to their ID from SCRATCH_START
+	    bsp_put(0, &sum, SCRATCH_START+cpuid, 1);	//bsp_put targets the same core but different address as according to their ID from SCRATCH_START
     }
     
     bsp_sync();								// another sync since we calle bsp_put
     
-    
     if (cpuid == 0) {							//CPU0 sums the results
-    	*SCRATCH_START=0;	
-	for(int i=1;i<5;i=i+1)	*SCRATCH_START=*SCRATCH_START+*(SCRATCH_START+i);
+	    for(int i=1;i<9;i=i+1)	sum += *(SCRATCH_START+i);
     }
     
-    if (cpuid == 0) {							// CPU0 prints the result
+    if (cpuid == 0) {
         puts(c0_string);
         for (int i = 0; i < 1000; i++) asm volatile ("");
-        putint(*SCRATCH_START);					// print the final result
+        putint(sum);					// print the final result, for CPU0 this is the whole sum
     } else {
-        for (int i = 0; i < 1000; i++) asm volatile ("");
-        //putint(*(SCRATCH_START+8));				// print the final result
         if(cpuid==1) puts(c1_string);
         else if(cpuid==2) puts(c2_string);
         else if(cpuid==3) puts(c3_string);
