@@ -40,6 +40,7 @@ endinterface
 interface Router;
     method Bool isInited;
     interface Vector#(NumPorts, DataLink)    dataLinks;
+    method Bool getRouterSync();
 endinterface
 
 function Bool newHeadFlit (Vector#(NumPorts, FIFOF#(Flit)) inputBuffer, Integer inputPort);
@@ -217,6 +218,16 @@ module mkRouter #(Bit#(3) routerX, Bit#(3) routerY) (Router);
 
     method Bool isInited;
         return inited; 
+    endmethod
+    
+    method Bool getRouterSync();
+    	Bool ret = True;
+    	
+    	for(Integer routerPort = 0; routerPort < valueOf(NumPorts); routerPort = routerPort + 1) begin
+    		ret = ret && (!inputBuffer[routerPort].notEmpty) && (!outputLatch[routerPort].notEmpty);
+    	end
+    	
+    	return ret;
     endmethod
 
 endmodule

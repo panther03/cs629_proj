@@ -13,6 +13,7 @@ endinterface
 
 interface Mesh3X3;
     interface Vector#(9, DataLink)    dataLinks;
+    method Bool getNoCSync();
 endinterface
 
 module mkMesh3X3 (Mesh3X3);
@@ -134,5 +135,19 @@ module mkMesh3X3 (Mesh3X3);
     endinterface;
 
     interface dataLinks = dataLinksDummy;
+    
+    method Bool getNoCSync();
+    	return		router_0_0.getRouterSync() &&
+    			router_1_0.getRouterSync() && 
+    			router_2_0.getRouterSync() &&
+    			
+    			router_0_1.getRouterSync() &&
+    			router_1_1.getRouterSync() &&
+    			router_2_1.getRouterSync() &&
+    			
+    			router_0_2.getRouterSync() &&
+    			router_1_2.getRouterSync() &&
+    			router_2_2.getRouterSync();
+    endmethod
 
 endmodule
