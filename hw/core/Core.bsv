@@ -324,6 +324,7 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
         if (f.flitType == HEAD && flitCpuId != coreId) begin
             $fdisplay(stderr, "Received a flit (for %d) which is not for me (%d).. ", flitCpuId, coreId);
         end else begin
+            $fdisplay(stderr, "(c=%d) new flit: ", coreId, fshow(f));
             fe.putFlit(f);
         end
     endmethod
