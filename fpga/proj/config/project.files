@@ -2,6 +2,7 @@
 ../../src/bluespec/FIFO2.v
 ../../src/bluespec/RevertReg.v
 ../../src/bluespec/SizedFIFO.v
+../../src/bluespec/RegFile.v
 ../../src/bluespec/SyncFIFO.v
 ../../src/bus_arbiter/busArbiter.v
 ../../src/bus_arbiter/queueMemory.v
