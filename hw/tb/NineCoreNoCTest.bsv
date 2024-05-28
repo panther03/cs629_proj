@@ -1,5 +1,5 @@
 import Core::*;
-import Mesh3X3::*;
+import MeshNxN::*;
 
 module mkNineCoreNoCTest();
     Core core0 <- mkCore(0, False);
@@ -12,7 +12,7 @@ module mkNineCoreNoCTest();
     Core core7 <- mkCore(7, False);
     Core core8 <- mkCore(8, False);
 
-    Mesh3X3 mesh3X3 <- mkMesh3X3;
+    MeshNxN#(3) mesh3X3 <- mkMeshNxN;
 
     rule updateSync;
         let c0sync = core0.getLocalSync();

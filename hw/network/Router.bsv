@@ -40,6 +40,7 @@ endinterface
 interface Router;
     method Bool isInited;
     interface Vector#(NumPorts, DataLink)    dataLinks;
+    method Bool getRouterSync();
 endinterface
 
 function Bool newHeadFlit (Vector#(NumPorts, FIFOF#(Flit)) inputBuffer, Integer inputPort);
@@ -57,7 +58,7 @@ endfunction
 function MeshHIdx getYCoordinate (FlitData headFlitData);
     Bit# (4) coreID = pack(headFlitData[21 : 18]);
 
-    MeshHIdx yCoordinate = unpack(coreID)[2 : 0] / 3;
+    MeshHIdx yCoordinate = (unpack(coreID) / 3)[2:0];
 
     return yCoordinate;
 endfunction
@@ -65,7 +66,7 @@ endfunction
 function MeshWIdx getXCoordinate (FlitData headFlitData);
     Bit# (4) coreID = pack(headFlitData[21 : 18]);
 
-    MeshWIdx xCoordinate = unpack(coreID)[2 : 0] % 3;
+    MeshWIdx xCoordinate = (unpack(coreID) % 3)[2:0];
     
     return xCoordinate;
 endfunction
@@ -108,12 +109,15 @@ module mkRouter #(Bit#(3) routerX, Bit#(3) routerY) (Router);
 
     /********************************* States *************************************/
     Reg#(Bool)                                inited         <- mkReg(False);
+    // Note: these all need to be bypass FIFOs, otherwise there will be input flits 
+    // "in flight" which do not see the allocated outputPortSource!
+    // These would need to be stalled or the outputPortSource forwarded
     Vector#(NumPorts, FIFO#(ArbRes))          arbResBuf      <- replicateM(mkBypassFIFO);
     Vector#(NumPorts, FIFOF#(Flit))           inputBuffer    <- replicateM(mkSizedBypassFIFOF(4));
     Vector#(NumPorts, NtkArbiter#(NumPorts))  outPortArbiter <- replicateM(mkOutPortArbiter);
     CrossbarSwitch                            cbSwitch       <- mkCrossbarSwitch;
     Vector#(NumPorts, FIFOF#(Flit))           outputLatch   <- replicateM(mkSizedBypassFIFOF(1));
-    Vector#(NumPorts, Reg#(DirIdx))           inputPortDestination   <- replicateM(mkReg(dIdxNULL));     // Destination output port for each input port
+    Vector#(NumPorts, Reg#(ArbRes))           outputPortSource   <- replicateM(mkReg(0));     // Input source for each output port
     
     rule doInitialize(!inited);
         // Some initialization for the priority arbiters
@@ -123,44 +127,55 @@ module mkRouter #(Bit#(3) routerX, Bit#(3) routerY) (Router);
         inited <= True;
     endrule 
 
-    for(Integer inPort = 0; inPort < valueOf(NumPorts); inPort = inPort + 1) begin
-        rule routeComputation (inited && newHeadFlit(inputBuffer, inPort) && inputPortDestination[inPort] == dIdxNULL);
-            DirIdx destinationPort = computeDestinationPort(inputBuffer[inPort].first, routerX, routerY);   // TODO: How to pass RouterX and RouterY to module?
-            inputPortDestination[inPort] <= destinationPort;
-        endrule
-    end
-
-    for(Integer inPort = 0; inPort < valueOf(NumPorts); inPort = inPort + 1) begin
-        rule routeRelease (inited && newTailFlit(inputBuffer, inPort) && inputPortDestination[inPort] != dIdxNULL);
-            inputPortDestination[inPort] <= dIdxNULL;
-        endrule
-    end
+    //for(Integer inPort = 0; inPort < valueOf(NumPorts); inPort = inPort + 1) begin
+    //    rule routeComputation (inited && newHeadFlit(inputBuffer, inPort) && inputPortDestination[inPort] == dIdxNULL);
+    //        DirIdx destinationPort = computeDestinationPort(inputBuffer[inPort].first, routerX, routerY);   // TODO: How to pass RouterX and RouterY to module?
+    //        inputPortDestination[inPort] <= destinationPort;
+    //    endrule
+    //end
+//
+    //for(Integer inPort = 0; inPort < valueOf(NumPorts); inPort = inPort + 1) begin
+    //    rule routeRelease (inited && newTailFlit(inputBuffer, inPort) && inputPortDestination[inPort] != dIdxNULL);
+    //        inputPortDestination[inPort] <= dIdxNULL;
+    //    endrule
+    //end
 
     // ! rl_Switch_Arbitration needs to be scheduled before routeRelease since it has to read the inputPortDestination for tail flit which will
     // ! get reset by the routeRelease as soon as it sees a tail flit.
 
     for(Integer outPort=0; outPort<valueOf(NumPorts); outPort = outPort+1) begin
         rule rl_Switch_Arbitration(inited);
-        
-            /*
-                Please implement the Switch Arbitration stage here
-                push into arbResBuf
-            */ 
 
-            ArbRes request = 0; // Arbitration Request for the Output Port outPort
+            // Has this out port already been allocated? (message not complete)
+            if (outputPortSource[outPort] == 0) begin
+                // If not, we will ask the arbiter which inport to take
+                ArbRes request = 0; // Arbitration Request for the Output Port outPort
 
-            for(Integer inPort = 0; inPort < valueOf(NumPorts); inPort = inPort + 1) begin
-                if (inputPortDestination[inPort] == fromInteger(outPort))
-                    request[inPort] = 1;
-                else 
-                    request[inPort] = 0;
-            end
+                for(Integer inPort = 0; inPort < valueOf(NumPorts); inPort = inPort + 1) begin
+                    if (inputBuffer[inPort].notEmpty) begin
+                        let flit = inputBuffer[inPort].first;
+                        let destPort = computeDestinationPort(flit, routerX, routerY);
+                        request[inPort] = (destPort == fromInteger(outPort) && (flit.flitType == HEAD)) ? 1 : 0;
+                    end else begin
+                        request[inPort] = 0;
+                    end
+                end
 
-            let response <- outPortArbiter[outPort].getArbit(request);
-            
-            if (response != 0)
-                arbResBuf[outPort].enq(response);
-            
+                let response <- outPortArbiter[outPort].getArbit(request);
+                
+                if (request != 0 && response != 0) begin
+                    //$display("new [rx=%d][ry=%d] ops[i]=%d", routerX, routerY, outputPortSource[outPort]);
+                    arbResBuf[outPort].enq(response);
+                end
+            end else begin
+                //$display("reuse [rx=%d][ry=%d] ops[i]=%d", routerX, routerY, outputPortSource[outPort]);
+                let inSource = outputPortSource[outPort];
+                if (inputBuffer[dir2Idx(inSource)].notEmpty)
+                    arbResBuf[outPort].enq(inSource);
+            end            
+
+//            for (Integer i = 0; i < valueOf(NumPorts); i = i + 1) begin
+  //          end
         endrule
     end
 
@@ -178,7 +193,8 @@ module mkRouter #(Bit#(3) routerX, Bit#(3) routerY) (Router);
                 let winnerInputFlit = inputBuffer[winnerIdx].first; inputBuffer[winnerIdx].deq();
                 cbSwitch.crossbarPorts[winnerIdx].putFlit(winnerInputFlit, fromInteger(outPort));
             // end
-            $display("[Switch Traversal][Output Port %0d] Winner Input: %0d\tFlit: ", outPort, winnerIdx, fshow(winnerInputFlit));
+            outputPortSource[outPort] <= (winnerInputFlit.flitType == TAIL) ? 0 : winner;
+            //$display("[rx=%d][ry=%d][Switch Traversal][Output Port %0d] Winner Input: %0d\tFlit: ", routerX, routerY, outPort, winnerIdx, fshow(winnerInputFlit));
         endrule
     end
     
@@ -189,7 +205,7 @@ module mkRouter #(Bit#(3) routerX, Bit#(3) routerY) (Router);
             let outputFlit <- cbSwitch.crossbarPorts[outPort].getFlit;
             outputLatch[outPort].enq(outputFlit);
 
-            $display("[Enqueue Latch][Output Port %0d] Flit: ", outPort, fshow(outputFlit));
+            //$display("[rx=%d][ry=%d][Enqueue Latch][Output Port %0d] Flit: ", routerX, routerY, outPort, fshow(outputFlit));
         endrule
     end
 
@@ -217,6 +233,16 @@ module mkRouter #(Bit#(3) routerX, Bit#(3) routerY) (Router);
 
     method Bool isInited;
         return inited; 
+    endmethod
+    
+    method Bool getRouterSync();
+    	Bool ret = True;
+    	
+    	for(Integer routerPort = 0; routerPort < valueOf(NumPorts); routerPort = routerPort + 1) begin
+    		ret = ret && (!inputBuffer[routerPort].notEmpty) && (!outputLatch[routerPort].notEmpty);
+    	end
+    	
+    	return ret;
     endmethod
 
 endmodule

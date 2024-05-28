@@ -35,16 +35,14 @@ int main(int a) {
     const char* c5_string = "Result is: ";
     const char* c6_string = "True";
     const char* c7_string = "False";
-    const char* c8_string = "SCR true";
-    const char* c9_string = "SCR false";
     const char* c10_string = "c0_v1data true";
     
     int cpuid = *BSP_CPU_ID;
 
     if (cpuid == 0) {
     	
-	for(int i=1;i<5;i=i+1){
-		bsp_put(i, c0_v1data+multiply(4, i-1), SCRATCH_START, 4);		//first put the v1 from SCRATCH_START then put the v2 after 4 address.
+	for(int i=1;i<9;i=i+1){
+		bsp_put(i, c0_v1data+multiply(2, i-1), SCRATCH_START, 2);		//first put the v1 from SCRATCH_START then put the v2 after 4 address.
 		//bsp_put(i, c0_v2data+multiply(4, i-1), SCRATCH_START+4, 4);			
 	}
 	
@@ -54,9 +52,9 @@ int main(int a) {
     
     if (cpuid == 0) {
     	
-	for(int i=1;i<5;i=i+1){
+	for(int i=1;i<9;i=i+1){
 		//bsp_put(i, c0_v1data+multiply(4, i-1), SCRATCH_START, 4);		//first put the v1 from SCRATCH_START then put the v2 after 4 address.
-		bsp_put(i, c0_v2data+multiply(4, i-1), SCRATCH_START+4, 4);			
+		bsp_put(i, c0_v2data+multiply(2, i-1), SCRATCH_START+2, 2);			
 	}
 	
     }
@@ -67,8 +65,8 @@ int main(int a) {
 	
 	    for (int i = 0; i < 1000; i++) asm volatile ("");    	    								// all the cpus apart from 0 start calculation
 	    int sum=0; 
-	    for (int* scratch_ptr = SCRATCH_START; scratch_ptr < SCRATCH_START + 4; scratch_ptr++) {	// results is overwritten to (SCRATCH_START+8)
-		   sum=sum+multiply((* scratch_ptr),(*(scratch_ptr+4)));
+	    for (int* scratch_ptr = SCRATCH_START; scratch_ptr < SCRATCH_START + 2; scratch_ptr++) {	// results is overwritten to (SCRATCH_START+8)
+		   sum=sum+multiply((* scratch_ptr),(*(scratch_ptr+2)));
 		    //bsp_put(0, scratch_ptr, SCRATCH_START+cpuid, 1);
 		    putchar(0x30 + *scratch_ptr);
 	    } 	     
@@ -85,7 +83,7 @@ int main(int a) {
     	for (int i = 0; i < 1000; i++) asm volatile ("");  						//P0 sums the results
     	*SCRATCH_START=0;
     	int sum=0;	
-	for(int* scratch_ptr = SCRATCH_START+1; scratch_ptr < SCRATCH_START + 5; scratch_ptr++)	sum=sum+*(scratch_ptr);
+	for(int* scratch_ptr = SCRATCH_START+1; scratch_ptr < SCRATCH_START + 9; scratch_ptr++)	sum=sum+*(scratch_ptr);
 	*SCRATCH_START=sum;
 	puts(c5_string);
 	if(sum==64)              puts(c6_string);

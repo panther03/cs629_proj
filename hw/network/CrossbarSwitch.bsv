@@ -98,7 +98,7 @@ module mkCrossbarSwitch(CrossbarSwitch);
       crossbarPortsConstruct[ports] =
         interface CrossbarPort
           method Action putFlit(Flit traverseFlit, DirIdx destDirn) if (isInputEmpty(mrmwRegisters, ports));
-            $display ("[Port %0d][putFlit] Dest Dirn: %0d\t", ports, destDirn, fshow(traverseFlit) );
+            //$display ("[Port %0d][putFlit] Dest Dirn: %0d\t", ports, destDirn, fshow(traverseFlit) );
             //  body for your method putFlit[ports]
             for(Integer i = 0; i < valueOf(NumPorts); i = i + 1) begin
               mrmwRegisters[ports][i] <= tagged Valid SwitchFlit{flit: traverseFlit, destDirn: destDirn};
@@ -124,7 +124,7 @@ module mkCrossbarSwitch(CrossbarSwitch);
               clearingIndex[ports] <= fromInteger(selection);
             end
 
-            $display ("[Port %0d][getFlit] ", ports, fshow(outputFlit));
+            //$display ("[Port %0d][getFlit] ", ports, fshow(outputFlit));
 
             return outputFlit;
 

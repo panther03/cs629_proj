@@ -36,7 +36,7 @@ module mkRouterTestBench();
     Flit headFlit = ?; Flit bodyFlit1 = ?; Flit bodyFlit2 = ?; Flit bodyFlit3 = ?; Flit bodyFlit4 = ?; Flit tailFlit = ?;
       
     headFlit.flitType = HEAD;
-    headFlit.flitData = (1 << 3) | (1);   // Destination Cooridnate (1, 1). For XY, output should be on East Port 
+    headFlit.flitData = (1 << 18);   // Destination Cooridnate (1, 1). For XY, output should be on East Port 
     bodyFlit1.flitType = BODY;
     bodyFlit1.flitData = 1;
     bodyFlit2.flitType = BODY;
@@ -46,7 +46,7 @@ module mkRouterTestBench();
     bodyFlit4.flitType = BODY;
     bodyFlit4.flitData = 4;
     tailFlit.flitType = TAIL;
-    tailFlit.flitData = (1 << 3) | (1);
+    tailFlit.flitData = (1 << 18);
 
     if(sent == 0) begin
       verify_queue[1].enq(headFlit); // Local to East
@@ -101,7 +101,7 @@ module mkRouterTestBench();
     endrule
   end
 
-  rule done (clkCount == 29000);
+  rule done (clkCount == 100);
     $finish;
   endrule
 
