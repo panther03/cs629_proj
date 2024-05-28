@@ -77,24 +77,28 @@ module mkFiveCoreTest();
     rule xchgFlits1 if (fromMaybe(2'b00, route_cpuId) == 2'b00);
         let f1 <- core1.getFlit();
         route_cpuId <= (f1.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b00);
+
         core0.putFlit(f1);
     endrule	
     
     rule xchgFlits2 if (fromMaybe(2'b01, route_cpuId) == 2'b01);
         let f2 <- core2.getFlit();
         route_cpuId <= (f2.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b01);
+
         core0.putFlit(f2);
     endrule
 
     rule xchgFlits3 if (fromMaybe(2'b10, route_cpuId) == 2'b10);
         let f3 <- core3.getFlit();
         route_cpuId <= (f3.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b10);
+
         core0.putFlit(f3);
     endrule
 
     rule xchgFlits4 if (fromMaybe(2'b11, route_cpuId) == 2'b11);
         let f4 <- core4.getFlit();
         route_cpuId <= (f4.flitType == TAIL) ? tagged Invalid : tagged Valid(2'b11);
+
         core0.putFlit(f4); 
     endrule
 
