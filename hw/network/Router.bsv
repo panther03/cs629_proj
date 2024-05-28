@@ -54,9 +54,25 @@ function Bool newTailFlit (Vector#(NumPorts, FIFOF#(Flit)) inputBuffer, Integer 
     else return False;
 endfunction
 
+function MeshHIdx getYCoordinate (FlitData headFlitData);
+    Bit# (4) coreID = pack(headFlitData[21 : 18]);
+
+    MeshHIdx yCoordinate = unpack(coreID)[2 : 0] / 3;
+
+    return yCoordinate;
+endfunction
+
+function MeshWIdx getXCoordinate (FlitData headFlitData);
+    Bit# (4) coreID = pack(headFlitData[21 : 18]);
+
+    MeshWIdx xCoordinate = unpack(coreID)[2 : 0] % 3;
+    
+    return xCoordinate;
+endfunction
+
 function DirIdx computeDestinationPort (Flit headFlit, Bit#(3) routerX_, Bit#(3) routerY_); // Route Computation Logic is implemented here
-    MeshHIdx destinationY = headFlit.flitData[2 : 0];
-    MeshWIdx destinationX = headFlit.flitData[5 : 3];
+    MeshHIdx destinationY = getYCoordinate( headFlit.flitData );
+    MeshWIdx destinationX = getXCoordinate( headFlit.flitData );
 
     DirIdx dirIdx = dIdxNULL;
 

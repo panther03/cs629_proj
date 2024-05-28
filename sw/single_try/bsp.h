@@ -2,8 +2,6 @@
 #define BSP_H
 #include "mmio.h"
 
-void putint(int a);
-
 static int bspQueue[1024];
 static char bspShadowQueue[1024];
 static int* bspQueuePtr = bspQueue;
@@ -23,19 +21,9 @@ static void bsp_put(int core, int* source, void* dest, int len) {
     *(bspQueuePtr++) = 0;
 }
 
-static void bsp_dump(int len) {
-    for (int i = 0; i < len; i++) {
-        putchar(0x30 + bspShadowQueue[i]);
-        putchar('|');
-        putint(bspQueue[i]);
-    }
-}
-
 static void bsp_sync() {
     *BSP_MY_SYNC = 1;
-    putchar('a');
     while (!*BSP_ALL_SYNC_START);
-    putchar('b');
     *BSP_ALL_SYNC_START = 0;
 
     int* bspRdPtr = bspQueue;
@@ -50,9 +38,7 @@ static void bsp_sync() {
 
     // copy the buffer
     *BSP_MY_SYNC = 0;
-    putchar('c');
     while (!*BSP_ALL_SYNC_END);
-    putchar('d');
     *BSP_ALL_SYNC_END = 0;
 }
 #endif
