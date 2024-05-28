@@ -35,15 +35,15 @@ module mkNineCoreNoCTest();
                 c7sync &&
                 c8sync
             ) begin
-            core0.setAllSync(True);
-            core1.setAllSync(True);
-            core2.setAllSync(True);
-            core3.setAllSync(True);
-            core4.setAllSync(True);
-            core5.setAllSync(True);
-            core6.setAllSync(True);
-            core7.setAllSync(True);
-            core8.setAllSync(True);
+            core0.setAllSync(Start);
+            core1.setAllSync(Start);
+            core2.setAllSync(Start);
+            core3.setAllSync(Start);
+            core4.setAllSync(Start);
+            core5.setAllSync(Start);
+            core6.setAllSync(Start);
+            core7.setAllSync(Start);
+            core8.setAllSync(Start);
         end else if (
                         !c0sync && 
                         !c1sync &&
@@ -55,15 +55,25 @@ module mkNineCoreNoCTest();
                         !c7sync && 
                         !c8sync
                     ) begin
-            core0.setAllSync(False);
-            core1.setAllSync(False);
-            core2.setAllSync(False);
-            core3.setAllSync(False);
-            core4.setAllSync(False);
-            core5.setAllSync(False);
-            core6.setAllSync(False);
-            core7.setAllSync(False);
-            core8.setAllSync(False);
+            core0.setAllSync(Finish);
+            core1.setAllSync(Finish);
+            core2.setAllSync(Finish);
+            core3.setAllSync(Finish);
+            core4.setAllSync(Finish);
+            core5.setAllSync(Finish);
+            core6.setAllSync(Finish);
+            core7.setAllSync(Finish);
+            core8.setAllSync(Finish);
+        end else begin
+            core0.setAllSync(Unsync);
+            core1.setAllSync(Unsync);
+            core2.setAllSync(Unsync);
+            core3.setAllSync(Unsync);
+            core4.setAllSync(Unsync);
+            core5.setAllSync(Unsync);
+            core6.setAllSync(Unsync);
+            core7.setAllSync(Unsync);
+            core8.setAllSync(Unsync);
         end
     endrule
 // NESWL

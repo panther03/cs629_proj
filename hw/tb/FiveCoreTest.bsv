@@ -23,46 +23,55 @@ module mkFiveCoreTest();
         let c4sync = core4.getLocalSync();
 
         if (c0sync && c1sync && c2sync && c3sync && c4sync) begin
-            core0.setAllSync(True);
-            core1.setAllSync(True);
-            core2.setAllSync(True);
-            core3.setAllSync(True);
-            core4.setAllSync(True);
+            core0.setAllSync(Start);
+            core1.setAllSync(Start);
+            core2.setAllSync(Start);
+            core3.setAllSync(Start);
+            core4.setAllSync(Start);
         end else if (!c0sync && !c1sync && !c2sync && !c3sync && !c4sync) begin
-            core0.setAllSync(False);
-            core1.setAllSync(False);
-            core2.setAllSync(False);
-            core3.setAllSync(False);
-            core4.setAllSync(False);
+            core0.setAllSync(Finish);
+            core1.setAllSync(Finish);
+            core2.setAllSync(Finish);
+            core3.setAllSync(Finish);
+            core4.setAllSync(Finish);
+        end else begin 
+            core0.setAllSync(Unsync);
+            core1.setAllSync(Unsync);
+            core2.setAllSync(Unsync);
+            core3.setAllSync(Unsync);
+            core4.setAllSync(Unsync);
         end
     endrule
 
     rule core0ToOthersHead if (state == Idle);
         let f <- core0.getFlit();
+        //$display("(head) putting a flit: ", fshow(f));
         dynamicAssert(f.flitType == HEAD, "first packet was not head packet");
         let flitCpuId = pack(f.flitData)[21:18];
         state <= Handling;
         let cpuId_next = (flitCpuId - 1)[1:0];
         cpuId <= cpuId_next;
-        let thing = case (cpuId_next) 
+        case (cpuId_next) 
             2'h0: core1.putFlit(f);
             2'h1: core2.putFlit(f);
             2'h2: core3.putFlit(f);
             2'h3: core4.putFlit(f);
-        endcase;
+        endcase
     endrule
+
 
     rule core0ToOthersHandle if (state == Handling);
         let f <- core0.getFlit();
+        //$display("(body) putting a flit: ", fshow(f));
         if (f.flitType == TAIL) begin
             state <= Idle;
         end
-        let thing = case (cpuId) 
+        case (cpuId) 
             2'h0: core1.putFlit(f);
             2'h1: core2.putFlit(f);
             2'h2: core3.putFlit(f);
             2'h3: core4.putFlit(f);
-        endcase;
+        endcase
     endrule
     
     rule xchgFlits1 if (fromMaybe(2'b00, route_cpuId) == 2'b00);

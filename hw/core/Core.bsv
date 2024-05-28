@@ -16,6 +16,8 @@ import CacheInterface::*;
 import FlitEngine::*;
 import MessageTypes::*;
 
+typedef enum{Unsync, Start, Finish} SyncState deriving (Eq, Bits, FShow);
+
 typedef struct {
     // TODO: the address doesn't need to be this big for our purposes
     Bit#(32) addr;
@@ -27,7 +29,7 @@ interface Core;
     // Poll sync register
     method Bool getLocalSync();
     // Set all_sync register(s)
-    method Action setAllSync(Bool startNotFinish);
+    method Action setAllSync(SyncState newState);
     // Core sending a flit out to the network
     method ActionValue#(Flit) getFlit();
     // Network giving the core a flit
@@ -243,10 +245,10 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
                 mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_my_sync)}});
             // poll all sync start register
             end if (req.addr == 'hfd00_0004) begin
-                mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_sync_all_start[0])}});
+                mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_sync_all_start[1])}});
             // poll all sync end register
             end if (req.addr == 'hfd00_0008) begin
-                mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_sync_all_end[0])}});
+                mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {31'h0, pack(bsp_sync_all_end[1])}});
             end if (req.addr == 'hfd00_000C) begin
                 mmioreq.enq(Mem { byte_en: req.byte_en, addr: req.addr, data: {28'h0, coreId}});
             end 
@@ -298,12 +300,21 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
         return bsp_my_sync || outgoingFlits.notEmpty;
     endmethod
 
-    method Action setAllSync(Bool startNotFinish);
-        if (startNotFinish) begin
-            bsp_sync_all_start[0] <= True;
-        end else begin
-            bsp_sync_all_end[0] <= True;
-        end
+    method Action setAllSync(SyncState newState);
+        case (newState)
+            Unsync: begin
+                bsp_sync_all_start[0] <= False;
+                bsp_sync_all_end[0] <= False;
+            end
+            Start: begin
+                bsp_sync_all_start[0] <= True;
+                bsp_sync_all_end[0] <= False;
+            end
+            Finish: begin
+                bsp_sync_all_start[0] <= False;
+                bsp_sync_all_end[0] <= True;
+            end
+        endcase
     endmethod
 
     method Action putFlit(Flit f);
@@ -313,7 +324,6 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
         if (f.flitType == HEAD && flitCpuId != coreId) begin
             $fdisplay(stderr, "Received a flit (for %d) which is not for me (%d).. ", flitCpuId, coreId);
         end else begin
-            $fdisplay(stderr, "(c=%d) new flit: ", coreId, fshow(f));
             fe.putFlit(f);
         end
     endmethod

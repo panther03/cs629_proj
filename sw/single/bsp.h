@@ -42,7 +42,6 @@ static void bsp_sync() {
         char type = *(bspShadowRdPtr++);
         int data = *(bspRdPtr++);
         *(ROUTER_SEND_FLIT_H+type) = data;
-        putint(data);
     }
     bspQueuePtr = bspQueue;
     bspShadowQueuePtr = bspShadowQueue;
