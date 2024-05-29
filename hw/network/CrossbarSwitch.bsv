@@ -1,5 +1,7 @@
 import Vector::*;
 import Ehr::*;
+import FIFO::*;
+import SpecialFIFOs::*;
 
 import NetworkTypes::*;
 import MessageTypes::*;
@@ -75,7 +77,8 @@ module mkCrossbarSwitch(CrossbarSwitch);
     interface crossbarPorts = crossbarPortsConstruct;
 
   */
-
+  
+  FIFO#(Bool) cbBuffer <- mkPipelineFIFO;
   Vector#(NumPorts, Vector#(NumPorts, Reg#(Maybe#(SwitchFlit)))) mrmwRegisters <- replicateM (replicateM(mkReg(tagged Invalid)));
   Vector#(NumPorts, Reg#(Bit#(3))) clearingIndex <- replicateM(mkReg(3'b111));
   // First dimension will be written by Input ports and the Second dimension will be read by the Output ports
@@ -103,10 +106,12 @@ module mkCrossbarSwitch(CrossbarSwitch);
             for(Integer i = 0; i < valueOf(NumPorts); i = i + 1) begin
               mrmwRegisters[ports][i] <= tagged Valid SwitchFlit{flit: traverseFlit, destDirn: destDirn};
             end
+            cbBuffer.enq(False);
           endmethod
 
           method ActionValue#(Flit) getFlit if(isOutputReady(mrmwRegisters, ports, clearingIndex) != -1);
             //  body for your method getFlit[ports]
+            cbBuffer.deq();
 
             Flit outputFlit = ?;
 
