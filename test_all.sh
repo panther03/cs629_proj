@@ -72,6 +72,13 @@ cd build
 timeout 120 ./SingleCoreTest
 cd ..
 
+
+echo "Testing dotproduct (single core)"
+./test.sh dotproduct32
+cd build
+timeout 120 ./SingleCoreTest
+cd ..
+
 echo "Testing dotproduct_5c32"
 ./test.sh dotproduct_5c32
 cd build
@@ -84,8 +91,14 @@ cd build
 timeout 120 ./NineCoreNoCTest
 cd ..
 
-echo "Testing dividesort32"
+echo "Testing dividesort32 (single core)"
 ./test.sh dividesort32
+cd build
+timeout 120 ./SingleCoreTest
+cd ..
+
+echo "Testing dividesort_9c32"
+./test.sh dividesort_9c32
 cd build
 timeout 120 ./NineCoreNoCTest
 cd ..

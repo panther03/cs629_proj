@@ -8,7 +8,7 @@ Use `./run_multicore.sh dotproduct_9c32` to run `sw/progs/src/dotproduct_9c.c` (
 
 ### Verilator
 
-Run `make` in `fpga/tb`. By default the dotproduct_9c_hw is run; this can be overriden using `PROGRAM=` on the command line.
+Run `make` in `fpga/tb`. By default the dotproduct_9c_hw is run; this can be overriden using `PROGRAM=` on the command line. Running under Verilator, the Verilog verson is essentialy the same as the NineCoreNoCTest, though it is hooked up to a UART, which is how printing can be done in synthesizable hardware.
 
 ### FPGA synthesis
 
