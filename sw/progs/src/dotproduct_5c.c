@@ -1,3 +1,5 @@
+// 5 core version; mainly just used for intermediate testing before noc was ready
+
 #include "../mmio.h"
 #include "../bsp.h"
 
@@ -65,7 +67,7 @@ int main(int a) {
     
     if (cpuid !=0) {
 	
-	    for (int i = 0; i < 1000; i++) asm volatile ("");    	    								// all the cpus apart from 0 start calculation
+	    //for (int i = 0; i < 1000; i++) asm volatile ("");    	    								// all the cpus apart from 0 start calculation
 	    int sum=0; 
 	    for (int* scratch_ptr = SCRATCH_START; scratch_ptr < SCRATCH_START + 4; scratch_ptr++) {	// results is overwritten to (SCRATCH_START+8)
 		   sum=sum+multiply((* scratch_ptr),(*(scratch_ptr+4)));
@@ -82,7 +84,7 @@ int main(int a) {
     
     if (cpuid == 0) {	
     
-    	for (int i = 0; i < 1000; i++) asm volatile ("");  						//P0 sums the results
+    	//for (int i = 0; i < 1000; i++) asm volatile ("");  						//P0 sums the results
     	*SCRATCH_START=0;
     	int sum=0;	
 	for(int* scratch_ptr = SCRATCH_START+1; scratch_ptr < SCRATCH_START + 5; scratch_ptr++)	sum=sum+*(scratch_ptr);
@@ -92,7 +94,7 @@ int main(int a) {
 	else 		       { puts(c7_string);} 
     }	
     else {
-        for (int i = 0; i < 1000; i++) asm volatile ("");
+        //for (int i = 0; i < 1000; i++) asm volatile ("");
             //putchar(0x30 + *(SCRATCH_START+8));				// print the final result
             /*if(cpuid==1) puts(c1_string);
             else if(cpuid==2) puts(c2_string);
