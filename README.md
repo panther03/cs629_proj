@@ -83,7 +83,7 @@ Performs the handshake procedure described above, then copies out from the queue
 
 ### Software
 
-We implemented two simple algorithms using `bsp_put()` and `bsp_sync()`: vector inner product computation and sorting. The C code for these is available in `sw/progs/src`, as `dotproduct_9c.c` and  `dividesort.c`. The general idea behind both algorithms is to split the input data and share it using `bsp_put()`, compute in parallel, share intermediate results to one core, and serially reduce to the desired output (eliding any necessary syncs). In this way, the software we have implemented is similar in spirit to a map-reduce system.
+We implemented two simple algorithms using `bsp_put()` and `bsp_sync()`: vector inner product computation and sorting. The C code for these is available in `sw/progs/src`, as `dotproduct_9c.c` and  `dividesort_9c.c`. The general idea behind both algorithms is to split the input data and share it using `bsp_put()`, compute in parallel, share intermediate results to one core, and serially reduce to the desired output (eliding any necessary syncs). In this way, the software we have implemented is similar in spirit to a map-reduce system.
 
 Note that we designate core 0 as a master in these algorithms, responsible for sending the input data to other cores, simply because we imagine core 0 to be pulling data from a DRAM which was written to by a host. We did not have time to implement such a system, so we initialized the data in the program instead. This however means that technically speaking all cores have the full data at startup since the scratchpads are initialized the same.
 
