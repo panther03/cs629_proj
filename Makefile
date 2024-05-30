@@ -1,4 +1,4 @@
-TARGETS := SingleCoreTest DualCoreTest FiveCoreTest RouterTestBench DualCoreRouterTest NineCoreNoCTest
+TARGETS := SingleCoreTest FiveCoreTest RouterTestBench NineCoreNoCTest
 TARGETSV := TopCore
 
 .DEFAULT_GOAL := all
@@ -17,4 +17,4 @@ clean:
 #	find . -name "*.bo" -type f -delete
 #	find . -name "*.ba" -type f -delete
 
-all: clean $(TARGETS)
+all: clean $(TARGETS) $(TARGETSV)

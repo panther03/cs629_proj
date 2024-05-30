@@ -17,7 +17,7 @@ import Ehr::*;
 typedef struct { Bit#(4) byte_en; Bit#(32) addr; Bit#(32) data; } Mem deriving (Eq, FShow, Bits);
 
 
-interface RVIfc;
+interface RVIfc#(numeric type n);
     method ActionValue#(Mem) getIReq();
     method Action getIResp(Mem a);
     method ActionValue#(Mem) getDReq();
@@ -29,14 +29,11 @@ endinterface
 interface Scoreboard;
     method Action insert(Bit#(5) dst);
     method Action remove(Bit#(5) dst);
-    method ActionValue#(Bool) search1(Bit#(5) src);
-    method ActionValue#(Bool) search2(Bit#(5) src);
-    method ActionValue#(Bool) search3(Bit#(5) src);
+    method ActionValue#(Bool) search(Bit#(5) src);
 endinterface
 
-// TODO: ask about 2-bit scoreboard/WAW stall
 module mkScoreboardBoolFlags(Scoreboard); 
-    Vector#(32, Ehr#(2, Bool)) ready <- replicateM(mkEhr(True));
+    Vector#(32,Ehr#(2, Bool)) ready <- replicateM(mkEhr(True));
 
     method Action insert(Bit#(5) dst);
         ready[dst][1] <= False;
@@ -46,16 +43,8 @@ module mkScoreboardBoolFlags(Scoreboard);
         ready[dst][0] <= True;
     endmethod
 
-    method ActionValue#(Bool) search1(Bit#(5) src);
-        return ready[src][1];
-    endmethod
-
-    method ActionValue#(Bool) search2(Bit#(5) src);
-        return ready[src][1];
-    endmethod
-
-     method ActionValue#(Bool) search3(Bit#(5) src);
-        return ready[src][1];
+    method ActionValue#(Bool) search(Bit#(5) src);
+        return ready[src][0];
     endmethod
 endmodule
 
@@ -106,28 +95,25 @@ typedef struct {
 `endif
 } E2W deriving (Eq, FShow, Bits);
 
-(* synthesize *)
-module mkPipelined #(Bool multithreaded) (RVIfc);
+//(* synthesize *)
+module mkPipelined (RVIfc#(n));
     // Interface with memory and devices
     FIFO#(Mem) toImem <- mkBypassFIFO;
     FIFO#(Mem) fromImem <- mkBypassFIFO;
-    FIFO#(Mem) toDmem <- mkBypassFIFO;
+    FIFO#(Mem) toDmem <- mkFIFO;
     FIFOF#(Mem) fromDmem <- mkBypassFIFOF;
-    FIFO#(Mem) toMMIO <- mkBypassFIFO;
+    FIFO#(Mem) toMMIO <- mkFIFO;
     FIFO#(Mem) fromMMIO <- mkBypassFIFO;
 
-    Reg#(Bit#(1)) lastThread <- mkReg(1);
+    Integer numThreads = valueOf(n);
+    Vector#(n, Ehr#(2, Bit#(32))) pcs <- replicateM(mkEhr(32'h0));
+    Vector#(n, Ehr#(2, Bit#(1))) epochs <- replicateM(mkEhr(1'h0));
+    Vector#(n, Vector#(32, Reg#(Bit#(32)))) rfs <- replicateM(replicateM(mkReg(32'h0)));
+    Vector#(n, Scoreboard) scs <- replicateM(mkScoreboardBoolFlags);
 
-    Ehr#(2, Bit#(32)) pcT0 <- mkEhr(0);
-    Ehr#(2, Bit#(32)) pcT1 <- mkEhr(0);
-    Ehr#(2, Bit#(1)) epochT0 <- mkEhr(0);
-    Ehr#(2, Bit#(1)) epochT1 <- mkEhr(0);
+    RWire#(Bit#(6)) decodeSCPort <- mkRWire;
 
-    Vector#(32, Ehr#(2, Bit#(32))) rfT0 <- replicateM(mkEhr(32'h0000000));
-    // TODO: figure out how to set a1 to 1 here
-    Vector#(32, Ehr#(2, Bit#(32))) rfT1 <- replicateM(mkEhr(32'h0000000));
-    Scoreboard scT0 <- mkScoreboardBoolFlags;
-    Scoreboard scT1 <- mkScoreboardBoolFlags;
+    Reg#(Bit#(1)) lastFetchedThread <- mkReg(fromInteger(numThreads - 1));
 
     FIFO#(F2D) f2d <- mkFIFO;
     FIFO#(D2E) d2e <- mkFIFO;
@@ -135,9 +121,11 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
 
     Reg#(Bool) starting <- mkReg(True);
 
-    rule init_t1_regfile if (starting);
-        rfT1[10][0] <= 1;
+    rule init if (starting);
         starting <= False;
+        for (Integer i = 1; i < numThreads; i = i + 1) begin
+            rfs[i][fromInteger(i)] <= pack(10);
+        end
     endrule
 
 `ifdef KONATA_ENABLE
@@ -167,76 +155,44 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
     endrule
 `endif
 
-		
-    rule fetchT0 if (!starting && (lastThread == 1));
+	for (Integer thread = 0; thread < numThreads; thread = thread + 1) begin
+        Integer prevThread = (thread == 0) ? (numThreads-1) : (thread - 1);
+        rule fetch if (!starting && (lastFetchedThread == fromInteger(prevThread)));
         // Fetch PC including bypassed result from execute
-        Bit#(32) pc_next = pcT0[1] + 4;
+        Bit#(32) pc_next = pcs[thread][0] + 4;
 
         // Update PC register based on calculated next
         // This will include the bypassed jump target
-        pcT0[1] <= pc_next; 
+        pcs[thread][0] <= pc_next; 
 
         // Mem should also initiate a request from the bypass
-        let req = Mem {byte_en: 0, addr: pcT0[1], data: ?};
+        let req = Mem {byte_en: 0, addr: pcs[thread][0], data: ?};
         toImem.enq(req);
 
 `ifdef KONATA_ENABLE
         // Trigger konata
         let iid <- fetch1Konata(lfh, fresh_id, 0);
-        labelKonataLeft(lfh, iid, $format("0x%x: ", pcT0[1]));
+        labelKonataLeft(lfh, iid, $format("0x%x: ", pcs[thread][0]));
 `endif
 
 `ifdef DEBUG_ENABLE 
-        $display("(cyc=%d) [Fetch] thread=0", cyc, fshow(pcT0[1]));
+        $display("(cyc=%d) [Fetch] thread=0", cyc, fshow(pcs[thread][0]));
 `endif
 
         // Enqueue to the next pipeline stage
         f2d.enq(F2D{
             pc: pc_next, // NEXT pc
-            ppc: pcT0[1], // PREVIOUS pc
+            ppc: pcs[thread][0], // PREVIOUS pc
 `ifdef KONATA_ENABLE
             k_id: iid,
 `endif
-            epoch: epochT0[1],
+            epoch: epochs[thread][0],
             thread_id: 0
         });
-        if (multithreaded) lastThread <= ~lastThread;
-    endrule
+        lastFetchedThread <= fromInteger(thread);
+        endrule
+    end
 
-    rule fetchT1 if (!starting && multithreaded && (lastThread == 0));
-        // Fetch PC including bypassed result from execute
-        Bit#(32) pc_next = pcT1[1] + 4;
-
-        // Update PC register based on calculated next
-        // This will include the bypassed jump target
-        pcT1[1] <= pc_next; 
-
-        // Mem should also initiate a request from the bypass
-        let req = Mem {byte_en: 0, addr: pcT1[1], data: ?};
-        toImem.enq(req);
-
-        // Trigger konata
-`ifdef KONATA_ENABLE
-        let iid <- fetch1Konata(lfh, fresh_id, 1);
-        labelKonataLeft(lfh, iid, $format("0x%x: ", pcT1[1]));
-`endif
-
-`ifdef DEBUG_ENABLE 
-        $display("(cyc=%d) [Fetch] thread=1", cyc, fshow(pcT1[1]));
-`endif
-
-        // Enqueue to the next pipeline stage
-        f2d.enq(F2D{
-            pc: pc_next, // NEXT pc
-            ppc: pcT1[1], // PREVIOUS pc
-`ifdef KONATA_ENABLE
-            k_id: iid,
-`endif
-            epoch: epochT1[1],
-            thread_id: 1
-        });
-        lastThread <= ~lastThread;
-    endrule
 
     rule decode if (!starting);
         // Check for operands being ready without dequeueing.
@@ -252,13 +208,12 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
         let rs1_idx = getInstFields(instr).rs1;
         let rs2_idx = getInstFields(instr).rs2;
         let rd_idx = getInstFields(instr).rd;
-        let rs1_rdy <- (thread == 1) ? scT1.search1(rs1_idx) : scT0.search1(rs1_idx);
-        let rs2_rdy <- (thread == 1) ? scT1.search1(rs2_idx) : scT0.search2(rs2_idx);
-        let rd_rdy <- (thread == 1) ? scT1.search3(rd_idx) : scT0.search3(rd_idx);
+        let rs1_rdy <- scs[thread].search(rs1_idx);
+        let rs2_rdy <- scs[thread].search(rs2_idx);
 
         //if (debug) $display("(cyc=%d) [Pre-Decode] [%d,%d,%d] ", cyc, rs1_rdy, rs2_rdy, rd_rdy, fshow(getInstFields(instr)));
      
-        if ((rs1_rdy) && (rs2_rdy) && (rd_rdy || !decodedInst.valid_rd)) begin
+        if ((rs1_rdy) && (rs2_rdy)) begin
             // Dequeue IMEM result with pipeline register, keeping them in-sync
             fromImem.deq();
             f2d.deq();
@@ -268,16 +223,12 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
 `endif
 
             // 0 is hard-wired to 0 val in RISC-V
-            let rs1 = (rs1_idx == 0 ? 0 : ((thread == 1 && multithreaded) ? rfT1[rs1_idx][1] : rfT0[rs1_idx][1]));
-            let rs2 = (rs2_idx == 0 ? 0 : ((thread == 1 && multithreaded) ? rfT1[rs2_idx][1] : rfT0[rs2_idx][1]));
+            let rs1 = (rs1_idx == 0 ? 0 : rfs[thread][rs1_idx]);
+            let rs2 = (rs2_idx == 0 ? 0 : rfs[thread][rs2_idx]);
 
             // RD is now busy in the scoreboard
             if (rd_idx != 0 && decodedInst.valid_rd) begin
-                if (thread == 1) begin
-                    scT1.insert(rd_idx);
-                end else begin
-                    scT0.insert(rd_idx);
-                end
+                decodeSCPort.wset({thread,rd_idx});
                 // $display("(cyc=%d) inserting %d", cyc, rd_idx);
             end
 
@@ -299,6 +250,13 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
                 rv2: rs2,
                 thread_id: thread
             });
+        end
+    endrule
+
+    rule scoreboardInsert if (!starting);
+        if (isValid(decodeSCPort.wget())) begin
+            Bit#(6) portVal = fromMaybe(6'h0, decodeSCPort.wget());
+            scs[portVal[5]].insert(portVal[4:0]);
         end
     endrule
 
@@ -329,7 +287,27 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
 		let size = funct3[1:0];
 		let addr = rv1 + imm;
 		Bit#(2) offset = addr[1:0];
-		if (isMemoryInst(dInst)) begin
+
+        let controlResult = execControl32(dInst.inst, rv1, rv2, imm, instr_pc);
+
+        // Detect squashed instructions. We poison them so we can 
+        // simply drop the instructions in writeback, freeing the 
+        // scoreboard entry as we would normally.
+        let poisoned = False;
+        if (epochs[thread][0] != decodedInstr.epoch) begin
+`ifdef KONATA_ENABLE
+            squashed.enq(current_id);
+`endif
+            poisoned = True;
+
+        // Poisoned instructions can't invalidate the epoch!
+        // Also, we can just use taken as a trigger for a misprediction, since we always predict not taken.
+        end else if (controlResult.taken) begin  
+            pcs[thread][1] <= controlResult.nextPC; 
+            epochs[thread][0] <= ~epochs[thread][0];
+        end
+
+		if (isMemoryInst(dInst) && !poisoned) begin
 			// Technical details for load byte/halfword/word
 		    let shift_amount = {offset, 3'b0};
 		    let byte_en = 0;
@@ -374,30 +352,8 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
             labelKonataLeft(lfh,current_id, $format(" (ALU)"));
 `endif
 		end
-		let controlResult = execControl32(dInst.inst, rv1, rv2, imm, instr_pc);
-		
 
-        // Detect squashed instructions. We poison them so we can 
-        // simply drop the instructions in writeback, freeing the 
-        // scoreboard entry as we would normally.
-        let poisoned = False;
-        if (((thread == 1) && epochT1[0] != decodedInstr.epoch) || ((thread == 0) && epochT0[0] != decodedInstr.epoch)) begin
-`ifdef KONATA_ENABLE
-            squashed.enq(current_id);
-`endif
-            poisoned = True;
-
-        // Poisoned instructions can't invalidate the epoch!
-        // Also, we can just use taken as a trigger for a misprediction, since we always predict not taken.
-        end else if (controlResult.taken) begin  
-            if (thread == 1) begin
-                pcT1[0] <= controlResult.nextPC; 
-                epochT1[0] <= ~epochT1[0];
-            end else begin
-                pcT0[0] <= controlResult.nextPC; 
-                epochT0[0] <= ~epochT0[0];
-            end
-        end
+        
 
         e2w.enq(E2W{
             mem_business: MemBusiness{isUnsigned: unpack(isUnsigned), size: size, offset: offset, mmio: mmio},
@@ -422,17 +378,28 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
         let data = executedInstr.data;
         let mem_business = executedInstr.mem_business;
         let poisoned = executedInstr.poisoned;
+        let fields = getInstFields(dInst.inst);
 
 `ifdef KONATA_ENABLE
         let current_id = executedInstr.k_id;
         if (!poisoned) begin
             writebackKonata(lfh,current_id);
             retired.enq(current_id);
+
+            if (dInst.valid_rd) begin
+              labelKonataLeft(lfh,current_id, $format("RF [%d]=%d", fields.rd, data));
+            end
         end
 `endif
 
-        let fields = getInstFields(dInst.inst);
-        if (isMemoryInst(dInst)) begin // (* // write_val *)
+`ifdef DEBUG_ENABLE
+		if(!poisoned) begin
+             $display("(cyc=%d) [Writeback] data=%d t=", cyc, data, fshow(thread));
+        end
+`endif
+
+        
+        if (isMemoryInst(dInst) && !poisoned) begin // (* // write_val *)
             let resp = ?;
 		    if (mem_business.mmio) begin 
                 resp = fromMMIO.first();
@@ -451,11 +418,7 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
 	     	3'b010 : data = mem_data;
              endcase
 		end
-`ifdef DEBUG_ENABLE
-		if(!poisoned) begin
-             $display("(cyc=%d) [Writeback]", cyc, fshow(thread));
-        end
-`endif
+
         // TODO: fix this fault logic so bluespec doesnt complain
         //if (!dInst.legal) begin
 		//	if (debug) $display("[Writeback] Illegal Inst, Drop and fault: ", fshow(dInst));
@@ -465,18 +428,10 @@ module mkPipelined #(Bool multithreaded) (RVIfc);
             let rd_idx = fields.rd;
             if (rd_idx != 0) begin 
                 if (!poisoned) begin 
-                    if (thread == 1 && multithreaded) begin
-                        rfT1[rd_idx][0] <= data;
-                    end else begin
-                        rfT0[rd_idx][0] <= data;
-                    end
+                    rfs[thread][rd_idx] <= data;
                 end
                 // $display("(cyc=%d) removing %d", cyc, rd_idx);
-                if (thread == 1) begin
-                    scT1.remove(rd_idx);
-                end else begin
-                    scT0.remove(rd_idx);
-                end
+                scs[thread].remove(rd_idx);
             end
 		end
 

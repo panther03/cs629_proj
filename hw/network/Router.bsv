@@ -104,7 +104,7 @@ function DirIdx computeDestinationPort (Flit headFlit, Bit#(3) routerX_, Bit#(3)
     return dirIdx;
 endfunction
 
-// (* synthesize *)
+(* synthesize *)
 module mkRouter #(Bit#(3) routerX, Bit#(3) routerY) (Router);
 
     /********************************* States *************************************/
@@ -126,22 +126,6 @@ module mkRouter #(Bit#(3) routerX, Bit#(3) routerY) (Router);
         end
         inited <= True;
     endrule 
-
-    //for(Integer inPort = 0; inPort < valueOf(NumPorts); inPort = inPort + 1) begin
-    //    rule routeComputation (inited && newHeadFlit(inputBuffer, inPort) && inputPortDestination[inPort] == dIdxNULL);
-    //        DirIdx destinationPort = computeDestinationPort(inputBuffer[inPort].first, routerX, routerY);   // TODO: How to pass RouterX and RouterY to module?
-    //        inputPortDestination[inPort] <= destinationPort;
-    //    endrule
-    //end
-//
-    //for(Integer inPort = 0; inPort < valueOf(NumPorts); inPort = inPort + 1) begin
-    //    rule routeRelease (inited && newTailFlit(inputBuffer, inPort) && inputPortDestination[inPort] != dIdxNULL);
-    //        inputPortDestination[inPort] <= dIdxNULL;
-    //    endrule
-    //end
-
-    // ! rl_Switch_Arbitration needs to be scheduled before routeRelease since it has to read the inputPortDestination for tail flit which will
-    // ! get reset by the routeRelease as soon as it sees a tail flit.
 
     for(Integer outPort=0; outPort<valueOf(NumPorts); outPort = outPort+1) begin
         rule rl_Switch_Arbitration(inited);

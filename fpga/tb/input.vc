@@ -1,0 +1,2 @@
+// This file typically lists flags required by a large project, e.g. include directories
++librescan +libext+.v+.sv+.vh+.svh -y . -y ../src -y ../src/bluespec -y ../src/bus_arbiter -y ../src/sdram -y ../src/spart -y ../../build
