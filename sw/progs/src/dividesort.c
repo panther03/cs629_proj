@@ -81,9 +81,9 @@ int multiply(int x, int y){
 
 int main(int a) {
 
- int size_of_array=32;					//parameters that can be configured
+ int size_of_array=128;					//parameters that can be configured
  int num_slave=8;
- int size_each=4;
+ int size_each=16;
  
     if (a == 1) { return 1; }
     const char* c0_string = "Core 0: Finished";

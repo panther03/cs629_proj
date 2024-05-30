@@ -1,5 +1,5 @@
 SHELL=/bin/bash
-PROGRAM ?= uarttest32
+PROGRAM ?= dotproduct_9c_hw32
 BSV_TOP = TopCore
 BSV_TOP_PATH = ../../build/mk$(BSV_TOP).v
 PROJECT_TOP=config/project.toplevel
@@ -62,7 +62,7 @@ define make_sandbox
 endef
 
 define make_memory_file 
- riscv64-unknown-elf-objcopy ../../sw/single/build/$(PROGRAM) -O binary $(PROJECT_SANDBOX)/mem.bin;\
+ riscv64-unknown-elf-objcopy ../../sw/progs/build/$(PROGRAM) -O binary $(PROJECT_SANDBOX)/mem.bin;\
  python convert.py --depth 4096 --width 32 $(PROJECT_SANDBOX)/mem.bin > $(PROJECT_SANDBOX)/mem.mem
 endef
 

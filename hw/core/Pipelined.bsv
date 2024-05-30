@@ -105,10 +105,6 @@ module mkPipelined (RVIfc#(n));
     FIFO#(Mem) toMMIO <- mkFIFO;
     FIFO#(Mem) fromMMIO <- mkBypassFIFO;
 
-
-    // TODO, make this all into a for loop
-    // add RWires for each stage decode, then one rule that writes the appropriate register file
-    //numeric type numThreads = multithreaded ? 2 : 1;
     Integer numThreads = valueOf(n);
     Vector#(n, Ehr#(2, Bit#(32))) pcs <- replicateM(mkEhr(32'h0));
     Vector#(n, Ehr#(2, Bit#(1))) epochs <- replicateM(mkEhr(1'h0));

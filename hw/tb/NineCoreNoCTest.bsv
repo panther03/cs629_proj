@@ -14,67 +14,71 @@ module mkNineCoreNoCTest();
 
     MeshNxN#(3) mesh3X3 <- mkMeshNxN;
 
+    Reg#(Bool) c0sync_r <- mkReg(False);
+    Reg#(Bool) c1sync_r <- mkReg(False);
+    Reg#(Bool) c2sync_r <- mkReg(False);
+    Reg#(Bool) c3sync_r <- mkReg(False);
+    Reg#(Bool) c4sync_r <- mkReg(False);
+    Reg#(Bool) c5sync_r <- mkReg(False);
+    Reg#(Bool) c6sync_r <- mkReg(False);
+    Reg#(Bool) c7sync_r <- mkReg(False);
+    Reg#(Bool) c8sync_r <- mkReg(False);
+    Reg#(SyncState) allsync_r <- mkReg(Unsync);
+
+    rule regSyncs;
+        c0sync_r <= core0.getLocalSync();
+        c1sync_r <= core1.getLocalSync();
+        c2sync_r <= core2.getLocalSync();
+        c4sync_r <= core4.getLocalSync();
+        c3sync_r <= core3.getLocalSync();
+        c6sync_r <= core6.getLocalSync();
+        c5sync_r <= core5.getLocalSync();
+        c8sync_r <= core8.getLocalSync();
+        c7sync_r <= core7.getLocalSync();
+    endrule
+
     rule updateSync;
-        let c0sync = core0.getLocalSync();
-        let c1sync = core1.getLocalSync();
-        let c2sync = core2.getLocalSync();
-        let c3sync = core3.getLocalSync();
-        let c4sync = core4.getLocalSync();
-        let c5sync = core5.getLocalSync();
-        let c6sync = core6.getLocalSync();
-        let c7sync = core7.getLocalSync();
-        let c8sync = core8.getLocalSync();
+        
         if (
-                c0sync &&
-                c1sync &&
-                c2sync &&
-                c3sync &&
-                c4sync &&
-                c5sync &&
-                c6sync &&
-                c7sync &&
-                c8sync
+                c0sync_r &&
+                c1sync_r &&
+                c2sync_r &&
+                c3sync_r &&
+                c4sync_r &&
+                c5sync_r &&
+                c6sync_r &&
+                c7sync_r &&
+                c8sync_r
             ) begin
-            core0.setAllSync(Start);
-            core1.setAllSync(Start);
-            core2.setAllSync(Start);
-            core3.setAllSync(Start);
-            core4.setAllSync(Start);
-            core5.setAllSync(Start);
-            core6.setAllSync(Start);
-            core7.setAllSync(Start);
-            core8.setAllSync(Start);
+            allsync_r <= Start;
+            
         end else if (
-                        !c0sync && 
-                        !c1sync &&
-                        !c2sync && 
-                        !c3sync && 
-                        !c4sync && 
-                        !c5sync && 
-                        !c6sync && 
-                        !c7sync && 
-                        !c8sync
+                        !c0sync_r && 
+                        !c1sync_r &&
+                        !c2sync_r && 
+                        !c3sync_r && 
+                        !c4sync_r && 
+                        !c5sync_r && 
+                        !c6sync_r && 
+                        !c7sync_r && 
+                        !c8sync_r
                     ) begin
-            core0.setAllSync(Finish);
-            core1.setAllSync(Finish);
-            core2.setAllSync(Finish);
-            core3.setAllSync(Finish);
-            core4.setAllSync(Finish);
-            core5.setAllSync(Finish);
-            core6.setAllSync(Finish);
-            core7.setAllSync(Finish);
-            core8.setAllSync(Finish);
+            allsync_r <= Finish;
         end else begin
-            core0.setAllSync(Unsync);
-            core1.setAllSync(Unsync);
-            core2.setAllSync(Unsync);
-            core3.setAllSync(Unsync);
-            core4.setAllSync(Unsync);
-            core5.setAllSync(Unsync);
-            core6.setAllSync(Unsync);
-            core7.setAllSync(Unsync);
-            core8.setAllSync(Unsync);
+            allsync_r <= Unsync;
         end
+    endrule
+
+    rule propogateAllSync;
+        core0.setAllSync(allsync_r);
+        core1.setAllSync(allsync_r);
+        core2.setAllSync(allsync_r);
+        core3.setAllSync(allsync_r);
+        core4.setAllSync(allsync_r);
+        core5.setAllSync(allsync_r);
+        core6.setAllSync(allsync_r);
+        core7.setAllSync(allsync_r);
+        core8.setAllSync(allsync_r);
     endrule
 // NESWL
     rule core0Put;

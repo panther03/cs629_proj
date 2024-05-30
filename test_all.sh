@@ -60,23 +60,32 @@ cd build
 timeout 25 ./SingleCoreTest
 cd ..
 
-echo "Testing multicore32"
-./testMC.sh multicore32
+echo "Testing matmul32"
+./test.sh matmul32
 cd build
 timeout 120 ./SingleCoreTest
 cd ..
 
-echo "Testing matmulmulti32"
-./testMC.sh matmulmulti32
+echo "Testing matmul2"
+./test.sh matmul232
 cd build
 timeout 120 ./SingleCoreTest
 cd ..
 
-echo "Testing buffer32"
-./testMC.sh buffer32
+echo "Testing dotproduct_5c32"
+./test.sh dotproduct_5c32
 cd build
-timeout 120 ./SingleCoreTest
+timeout 120 ./FiveCoreTest
 cd ..
 
+echo "Testing dotproduct_9c32"
+./test.sh dotproduct_9c32
+cd build
+timeout 120 ./NineCoreNoCTest
+cd ..
 
-
+echo "Testing dividesort32"
+./test.sh dividesort32
+cd build
+timeout 120 ./NineCoreNoCTest
+cd ..

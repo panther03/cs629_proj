@@ -1,5 +1,6 @@
 ../../src/bluespec/BRAM2BELoad.v
 ../../src/bluespec/FIFO2.v
+../../src/bluespec/FIFO1.v
 ../../src/bluespec/RevertReg.v
 ../../src/bluespec/SizedFIFO.v
 ../../src/bluespec/RegFile.v
@@ -15,10 +16,10 @@
 ../../src/spart/spart.sv
 ../../src/CoreWrapper.v
 ../../src/top.v
+../../../build/mkCrossbarSwitch.v
+../../../build/mkOutPortArbiter.v
 ../../../build/mkPipelined.v
-../../../build/mkCache32.v
-../../../build/mkCache.v
-../../../build/module_dir2Idx.v
-../../../build/module_idx2Dir.v
-../../../build/module_getReverseIdx.v
 ../../../build/mkTopCore.v
+../../../build/module_dir2Idx.v
+../../../build/module_getReverseIdx.v
+../../../build/module_idx2Dir.v

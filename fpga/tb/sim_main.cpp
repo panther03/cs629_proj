@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     top->rst = 1;
 
     // Simulate until $finish
-    while (!contextp->gotFinish() && (contextp->time() < 100000)) {
+    while (!contextp->gotFinish()) {
         // Historical note, before Verilator 4.200 Verilated::gotFinish()
         // was used above in place of contextp->gotFinish().
         // Most of the contextp-> calls can use Verilated:: calls instead;

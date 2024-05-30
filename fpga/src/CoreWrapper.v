@@ -35,6 +35,7 @@ module CoreWrapper (
 	wire [31:0]respData;
 	wire respValid;
 	wire respReady;
+	wire core_finished;
 
 	mkTopCore iCORE (
 		.CLK(clk),
@@ -46,7 +47,7 @@ module CoreWrapper (
 		.putBusResp_resp(respData),
 		.EN_putBusResp(respValid),
 		.RDY_putBusResp(respReady),
-		.getFinished(finished)
+		.getFinished(core_finished)
 	);
 
 	/////////////////////
@@ -101,6 +102,7 @@ module CoreWrapper (
 	wire spart_out_error;
 	
 	wire thing;
+	wire spart_all_done;
 
 	spart iSPART (
 		.clk(clk),
@@ -119,7 +121,8 @@ module CoreWrapper (
 		.bus_error_o(spart_out_error),
 		.led(thing),
 		.TX(uart_tx),
-		.RX(uart_rx)
+		.RX(uart_rx),
+		.all_done(spart_all_done)
 	);
 
 	//////////////////
@@ -149,6 +152,8 @@ module CoreWrapper (
 	assign leds[2] = thing;
 	assign leds[3] = 1'b0;
 	assign leds[4] = started;
+
+	assign finished = core_finished && spart_all_done;
 endmodule
 
 module CpuBusMaster (

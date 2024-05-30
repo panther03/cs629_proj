@@ -7,12 +7,14 @@ module tb_harness ( input wire clk, input wire rst );
     //////////////////////
     wire uart_rx;
     wire uart_tx;
+    wire finished;
 
     CoreWrapper iCORE(
         .clk(clk), 
         .rst(rst),
         .uart_tx(uart_tx),
-        .uart_rx(uart_rx)
+        .uart_rx(uart_rx),
+        .finished(finished)
     );
 
     /////////////////////////////
@@ -36,5 +38,8 @@ initial begin
         $dumpvars();
     end
 end
+    always @* begin
+        if (finished) $finish;
+    end
 endmodule
 `default_nettype wire

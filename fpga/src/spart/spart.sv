@@ -20,6 +20,7 @@ module spart
     output bus_error_o,
 
     output led,
+    output all_done,
 
     output TX,				      // UART TX line
     input RX				      // UART RX line
@@ -60,7 +61,6 @@ module spart
     logic [12:0]DB;
     always_ff @(posedge clk,negedge rst_n)
     if (!rst_n) 
-        // TODO default baud rate
         // configured for a 50mhz clock
         DB <= 13'h01B2;
     else if (divbuffer_reg_write) begin // Write low bit
@@ -78,6 +78,7 @@ module spart
 
     // Specifies when TX has consumed data so old pointer can be incremented
     logic tx_started;
+    logic tx_ready;
 
     // Instantiate UART TX
     UART_tx uart_tx (
@@ -85,6 +86,7 @@ module spart
     .queue_not_empty(tx_q_empty_n), // input
     .tx_data(tx_data), // input
     .baud(DB), // input
+    .ready(tx_ready), // output
     .tx_started(tx_started), // output
     .TX(TX) // output
     );
@@ -191,5 +193,6 @@ module spart
     assign bus_addrData_o = databuffer_reg_read ?  {24'h0, rx_data} : (status_reg_read ? {24'h0, status_reg} : 32'h0);
     assign bus_endTransaction_o = cmd_en;
     assign bus_dataValid_o = cmd_en;
+    assign all_done = (~tx_q_empty_n) && tx_ready;
 				   
 endmodule

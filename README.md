@@ -1,6 +1,19 @@
-note: to use different defines, pass `DEFINES=` to the makefile as follows
+# CS629 Final Project: BSP machine on NoC
 
-```make DualCoreTest DEFINES="-D CACHE_ENABLE" -B```
-(`-B` re-executes the rule everytime)
+Team members:
+* Julien de Castelnau
+* Batuhan Keskin
+* Madhur Kumar
 
-note that if you want to change the flags for the dependencies, you need to run `make clean` so bluespec compiles them again as well
+## Repo Structure
+
+* `hw/`: contains all Bluespec code, in various subdirectories grouped by purpose
+* `sw/`: contains all test C programs, mainly in the `progs` subdir
+* `tools/`: misc scripts
+* `fpga/`: project files and Verilog top-level modules for synthesis/running in Verilator
+
+## Building/Running
+
+See [BUILDING.md](./BUILDING.md) for details.
+
+## Project Description

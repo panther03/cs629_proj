@@ -5,49 +5,8 @@ module top			    ( input wire         clock12MHz,
                           input wire         RxD,
                           output wire        TxD,
 
-                          output wire        sdramClk,
-                          output wire        sdramCke,
-                                             sdramCsN,
-                                             sdramRasN,
-                                             sdramCasN,
-                                             sdramWeN,
-                          output wire [1:0]  sdramDqmN,
-                          output wire [12:0] sdramAddr,
-                          output wire [1:0]  sdramBa,
-                          inout wire [15:0]  sdramData,
-
-                          // The spi interface
-                          output wire        spiScl,
-                                             spiNCs,
-                          inout wire         spiSiIo0,
-                                             spiSoIo1,
-                                             spiIo2,
-                                             spiIo3,
-
-                          output             pixelClock,
-                                             horizontalSync,
-                                             verticalSync,
-                                             activePixel,
-
-                          input wire [7:0]  dipSwitch,
-                          output wire [4:0] leds,
-`ifdef GECKO5Education
-                          output wire [4:0]  hdmiRed,
-                                             hdmiBlue,
-                          output wire [5:0]  hdmiGreen
-`else
-                          output wire [3:0]  hdmiRed,
-                                             hdmiGreen,
-                                             hdmiBlue,
-`endif
-                          output wire        SCL,
-                                             camnReset,
-                          inout              SDA,
-                          input wire         camPclk,
-                                             camHsync,
-                                             camVsync,
-                                             biosBypass,
-                          input wire [7:0]   camData
+                    
+                          output wire [4:0] leds
                            );
 
 
@@ -68,7 +27,7 @@ module top			    ( input wire         clock12MHz,
   
 	altpll	altpll_component (
 				.areset (~nReset),
-				.inclk ({1'b0,clock12MHz}),
+				.inclk ({1'b0,clock50MHz}),
 				.clk (s_systemClock),
 				.locked (s_pllLocked),
 				.activeclock (),
@@ -106,9 +65,9 @@ module top			    ( input wire         clock12MHz,
 				.vcounderrange ());
 	defparam
 		altpll_component.bandwidth_type = "AUTO",
-		altpll_component.clk0_divide_by = 12,
+		altpll_component.clk0_divide_by = 1,
 		altpll_component.clk0_duty_cycle = 50,
-		altpll_component.clk0_multiply_by = 50,
+		altpll_component.clk0_multiply_by = 1,
 		altpll_component.clk0_phase_shift = "0",
 		altpll_component.compensate_clock = "CLK0",
 		altpll_component.inclk0_input_frequency = 83333,

@@ -3,6 +3,7 @@ module UART_tx (
     input queue_not_empty,
     input [7:0] tx_data,
     input [12:0] baud,
+    output ready,
     output reg tx_started,
     output reg TX
 );
@@ -95,5 +96,7 @@ always_comb begin
         end
     endcase
 end
+
+assign ready = (state == IDLE);
     
 endmodule

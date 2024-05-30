@@ -1,5 +1,7 @@
 // Pipelined processor, more amenable to synthesis version.
 // Removed giant Ehr scoreboard  + regfile.
+// beware the comments in this file are mostly wrong as I have not taken 
+// the time to clean things up from the old version
 
 //`define KONATA_ENABLE
 //`define DEBUG_ENABLE
@@ -94,7 +96,6 @@ typedef struct {
 
 typedef struct {
     Bit#(32) data;
-    // it's actually unecessary, as this is an invariant; we don't try to forward invalid data
     Bool data_valid;
     Bit#(1) thread_id;
     Bit#(5) rd_idx;

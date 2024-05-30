@@ -85,8 +85,8 @@ module BRAM2BELoad(CLKA,
 
        .clock_enable_core_a                ("USE_INPUT_CLKEN"),//
        .clock_enable_core_b                ("USE_INPUT_CLKEN"),//
-       .read_during_write_mode_port_a      ("OLD_DATA"),
-       .read_during_write_mode_port_b      ("OLD_DATA"),
+       .read_during_write_mode_port_a      ("DONT_CARE"),
+       .read_during_write_mode_port_b      ("DONT_CARE"),
 
        .enable_ecc                         ("FALSE"),//
        .width_eccstatus                    (3),//

@@ -11,7 +11,9 @@ import PipelinedSyn::*;
 
 import MemTypes::*;
 import NetworkTypes::*;
+`ifdef CACHE_ENABLE
 import CacheInterface::*;
+`endif
 
 import FlitEngine::*;
 import MessageTypes::*;
@@ -42,6 +44,7 @@ interface Core;
     method Bool getFinished();
 endinterface
 
+(* synthesize *)
 module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
 `ifdef CACHE_ENABLE
     CacheInterface cache <- mkCacheInterface();
@@ -318,8 +321,6 @@ module mkCore #(Bit#(4) coreId, Bool multithreaded) (Core);
     endmethod
 
     method Action putFlit(Flit f);
-        // TODO: check the processor ID before we put it to the FE
-        // for verificaton purposes (sanity check)
         let flitCpuId = pack(f.flitData)[21:18];
         if (f.flitType == HEAD && flitCpuId != coreId) begin
             $fdisplay(stderr, "(c=%d) received a flit for %d, not me: ", coreId, flitCpuId, fshow(f));
